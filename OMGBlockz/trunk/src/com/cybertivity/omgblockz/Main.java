@@ -8,6 +8,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Box;
+import com.jme3.system.AppSettings;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,6 +18,13 @@ import java.util.logging.Logger;
  * @author normenhansen
  */
 public class Main extends SimpleApplication {
+
+    public Main() {
+        settings = new AppSettings(true);
+        settings.setWidth(1280);
+        settings.setHeight(720);
+        settings.setTitle("OMG! Blockz!");
+    }
 
     public static void main(String[] args) {
         Main app = new Main();
