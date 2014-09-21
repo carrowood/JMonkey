@@ -1,6 +1,6 @@
-package com.cybertivity.omgblockz.Dimensions;
+package com.cybertivity.omgblockz.dimensions;
 
-import com.cybertivity.omgblockz.Utility.Coordinate;
+import com.cybertivity.omgblockz.utility.Coordinate;
 
 public interface DimensionInterface {
 

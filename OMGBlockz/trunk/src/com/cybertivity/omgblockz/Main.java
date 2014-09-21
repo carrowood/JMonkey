@@ -1,6 +1,8 @@
 package com.cybertivity.omgblockz;
 
-import com.cybertivity.omgblockz.Worlds.StandardWorld;
+import com.cybertivity.omgblockz.worlds.*;
+import com.cybertivity.omgblockz.dimensions.*;
+import com.cybertivity.omgblockz.utility.Coordinate;
 import com.jme3.app.SimpleApplication;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -43,6 +45,7 @@ public class Main extends SimpleApplication {
         rootNode.attachChild(geom);
         try {
             StandardWorld world = new StandardWorld("TunaBomber", "D:\\temp\\OMGBlockz\\Saves", "Test1");
+            world.getChunk(Dimension.OVERWORLD, new Coordinate(0,0,0));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }

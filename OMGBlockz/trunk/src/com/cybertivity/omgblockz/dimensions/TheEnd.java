@@ -1,6 +1,6 @@
-package com.cybertivity.omgblockz.Dimensions;
+package com.cybertivity.omgblockz.dimensions;
 
-import com.cybertivity.omgblockz.Utility.FileSystemHelper;
+import com.cybertivity.omgblockz.utility.FileSystemHelper;
 
 public class TheEnd extends DimensionBase {
 

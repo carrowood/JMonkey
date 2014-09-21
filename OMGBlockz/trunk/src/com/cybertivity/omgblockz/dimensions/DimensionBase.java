@@ -2,9 +2,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.cybertivity.omgblockz.Dimensions;
+package com.cybertivity.omgblockz.dimensions;
 
-import com.cybertivity.omgblockz.Utility.*;
+import com.cybertivity.omgblockz.utility.FileSystemHelper;
 
 public abstract class DimensionBase implements DimensionInterface {
 

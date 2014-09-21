@@ -1,4 +1,4 @@
-package com.cybertivity.omgblockz.Utility;
+package com.cybertivity.omgblockz.utility;
 
 import java.io.File;
 
