@@ -1,0 +1,23 @@
+package com.cybertivity.omgblockz.worlds;
+
+import com.cybertivity.omgblockz.dimensions.*;
+import com.cybertivity.omgblockz.utility.Coordinate;
+import java.io.IOException;
+
+public class StandardWorld extends WorldBase {
+
+    public StandardWorld(String seed, String path, String name) throws IOException {
+        super(seed, path, name);
+
+        Overworld overworld = new Overworld(super.getSeed(), this.getPath());
+        Nether nether = new Nether(super.getSeed(), this.getPath());
+        TheEnd theEnd = new TheEnd(super.getSeed(), this.getPath());
+        this.AddDimension(overworld);
+        this.AddDimension(nether);
+        this.AddDimension(theEnd);
+    }
+
+    public void getChunk(Dimension dimension, Coordinate coordinate) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+}
