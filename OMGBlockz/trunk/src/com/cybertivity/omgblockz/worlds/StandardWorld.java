@@ -16,8 +16,4 @@ public class StandardWorld extends WorldBase {
         this.AddDimension(nether);
         this.AddDimension(theEnd);
     }
-
-    public void getChunk(Dimension dimension, Coordinate coordinate) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 }

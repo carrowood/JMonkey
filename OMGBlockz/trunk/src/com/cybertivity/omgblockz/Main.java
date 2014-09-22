@@ -45,7 +45,7 @@ public class Main extends SimpleApplication {
         rootNode.attachChild(geom);
         try {
             StandardWorld world = new StandardWorld("TunaBomber", "D:\\temp\\OMGBlockz\\Saves", "Test1");
-            world.getChunk(Dimension.OVERWORLD, new Coordinate(0,0,0));
+            Chunk chunk = world.getChunk(Dimension.OVERWORLD, new Coordinate(0,0,0));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }

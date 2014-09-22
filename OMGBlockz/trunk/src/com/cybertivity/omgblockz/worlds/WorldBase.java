@@ -1,7 +1,8 @@
 package com.cybertivity.omgblockz.worlds;
 
-import com.cybertivity.omgblockz.utility.FileSystemHelper;
-import com.cybertivity.omgblockz.dimensions.DimensionInterface;
+import com.cybertivity.omgblockz.*;
+import com.cybertivity.omgblockz.utility.*;
+import com.cybertivity.omgblockz.dimensions.*;
 import java.util.ArrayList;
 
 public abstract class WorldBase implements WorldInterface {
@@ -30,6 +31,21 @@ public abstract class WorldBase implements WorldInterface {
             seed = String.valueOf(System.currentTimeMillis());
         }
         return seed.hashCode();
+    }
+
+    public Chunk getChunk(Dimension dimension, Coordinate coordinate) {
+        DimensionInterface targetDimension = null;
+        for (int i = 0; i < dimensions.size(); i++) {
+            DimensionInterface testDimension = dimensions.get(i);
+            if (testDimension.getDimension()==dimension) {
+                targetDimension = testDimension;
+            }
+        }
+        if (targetDimension != null) {
+            return targetDimension.getChunk(coordinate);
+        } else {
+            throw new UnsupportedOperationException("Unknown Dimension");
+        }
     }
 
     @Override
