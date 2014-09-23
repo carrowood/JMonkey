@@ -5,11 +5,11 @@ import com.cybertivity.omgblockz.utility.Coordinate;
 
 public interface DimensionInterface {
 
-    int getMaxLandheight();
+    short getMaxLandheight();
 
-    int getSeaLevel();
+    short getSeaLevel();
 
-    int getWorldHieght();
+    short getWorldHeight();
 
     public Chunk getChunk(Coordinate coordinate);
 

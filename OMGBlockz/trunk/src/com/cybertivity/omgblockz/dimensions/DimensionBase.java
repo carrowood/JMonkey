@@ -14,17 +14,17 @@ public abstract class DimensionBase implements DimensionInterface {
 
     private int seed;
     private String path;
-    private int worldHieght;
-    private int maxLandheight;
-    private int seaLevel;
+    private short worldHeight;
+    private short maxLandheight;
+    private short seaLevel;
     private Dimension dimension;
     protected static final ArrayList<BiomeInterface> biomes = new ArrayList<BiomeInterface>();
 
-    public DimensionBase(Dimension dimension, int seed, String path, int worldHieght, int maxLandheight, int seaLevel) {
+    public DimensionBase(Dimension dimension, int seed, String path, short worldHeight, short maxLandheight, short seaLevel) {
         this.dimension = dimension;
         this.seed = seed;
         this.path = path;
-        this.worldHieght = worldHieght;
+        this.worldHeight = worldHeight;
         this.maxLandheight = maxLandheight;
         this.seaLevel = seaLevel;
         FileSystemHelper.createDirectoryIfNeeded(path);
@@ -35,20 +35,20 @@ public abstract class DimensionBase implements DimensionInterface {
         if (chunk == null) {
             BiomeManager biomeManager = BiomeManager.getInstance();
             BiomeInterface biome = biomeManager.GetBiome(seed, coordinate);
-            chunk = biome.GetChunk(seed, coordinate);
+            chunk = biome.GetChunk(seed, coordinate, worldHeight, maxLandheight, seaLevel);
         }
         return chunk;
     }
 
-    public int getWorldHieght() {
-        return worldHieght;
+    public short getWorldHeight() {
+        return worldHeight;
     }
 
-    public int getMaxLandheight() {
+    public short getMaxLandheight() {
         return maxLandheight;
     }
 
-    public int getSeaLevel() {
+    public short getSeaLevel() {
         return seaLevel;
     }
 
