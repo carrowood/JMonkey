@@ -11,7 +11,7 @@ public interface DimensionInterface {
 
     short getWorldHeight();
 
-    public Chunk getChunk(Coordinate coordinate);
+    public Chunk GetChunk(int seed, Coordinate worldCoordinate);
 
     Dimension getDimension();
 

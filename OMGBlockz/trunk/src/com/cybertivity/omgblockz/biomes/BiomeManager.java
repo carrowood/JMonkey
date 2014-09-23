@@ -21,7 +21,7 @@ public class BiomeManager {
         return instance;
     }
 
-    public BiomeInterface GetBiome(int seed, Coordinate coordinate) {
+    public BiomeInterface GetBiome(int seed, Coordinate dimensionCoordinate) {
 
         //first, return from cache if loaded; if not then
         //use 2D moise to get -1 to 1

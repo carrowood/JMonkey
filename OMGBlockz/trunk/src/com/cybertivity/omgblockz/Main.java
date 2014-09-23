@@ -12,10 +12,21 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
 import java.io.IOException;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class Main extends SimpleApplication {
+
+    private static FileHandler fh = null;
+
+    private static void ConfigureLogging() {
+        Logger l = Logger.getLogger("");
+        fh.setFormatter(new SimpleFormatter());
+        l.addHandler(fh);
+        l.setLevel(Level.CONFIG);
+    }
 
     public Main() {
         settings = new AppSettings(true);
@@ -27,6 +38,7 @@ public class Main extends SimpleApplication {
     public static void main(String[] args) {
         Main app = new Main();
         app.start();
+        ConfigureLogging();
     }
 
     @Override
@@ -41,9 +53,12 @@ public class Main extends SimpleApplication {
         rootNode.attachChild(geom);
         try {
             StandardWorld world = new StandardWorld("TunaBomber", "D:\\temp\\OMGBlockz\\Saves", "Test1");
-            Chunk chunk = world.getChunk(Dimension.OVERWORLD, new Coordinate(0,0,0));
+            Chunk chunk = world.getChunk(Dimension.OVERWORLD, new Coordinate(0, 0, 0));
+
+
         } catch (IOException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Main.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 

@@ -30,12 +30,14 @@ public abstract class DimensionBase implements DimensionInterface {
         FileSystemHelper.createDirectoryIfNeeded(path);
     }
 
-    public Chunk getChunk(Coordinate coordinate) {
-        Chunk chunk = checkDisk(coordinate);
+    public Chunk GetChunk(int seed, Coordinate dimensionCoordinate) {
+        int chunkCoordinateX = Chunk.getChunkCoordinateXFromDimensionCoordinateX(dimensionCoordinate);
+        int chunkCoordinateZ = Chunk.getChunkCoordinateZFromDimensionCoordinateZ(dimensionCoordinate);
+        Chunk chunk = Chunk.getExistingChunk(chunkCoordinateX, chunkCoordinateZ);
         if (chunk == null) {
             BiomeManager biomeManager = BiomeManager.getInstance();
-            BiomeInterface biome = biomeManager.GetBiome(seed, coordinate);
-            chunk = biome.GetChunk(seed, coordinate, worldHeight, maxLandheight, seaLevel);
+            BiomeInterface biome = biomeManager.GetBiome(seed, dimensionCoordinate);
+            chunk = biome.GetChunk(seed, chunkCoordinateX, chunkCoordinateZ, this);
         }
         return chunk;
     }
@@ -56,8 +58,11 @@ public abstract class DimensionBase implements DimensionInterface {
         return dimension;
     }
 
-    private Chunk checkDisk(Coordinate coordinate) {
-        //TODO Chunk checkDisk(Coordinate coordinate)
-        return null;
+    public int getSeed() {
+        return seed;
+    }
+
+    public String getPath() {
+        return path;
     }
 }
