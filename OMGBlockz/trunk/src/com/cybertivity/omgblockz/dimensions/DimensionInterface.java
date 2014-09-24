@@ -7,11 +7,13 @@ public interface DimensionInterface {
 
     short getMaxLandheight();
 
-    short getSeaLevel();
+    byte getSeaLevel();
 
     short getWorldHeight();
 
-    public Chunk GetChunk(int seed, Coordinate worldCoordinate);
+    public Chunk getChunk(int seed, Coordinate worldCoordinate);
+
+    Chunk[][] getChunkArray(int seed, Coordinate dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ);
 
     Dimension getDimension();
 

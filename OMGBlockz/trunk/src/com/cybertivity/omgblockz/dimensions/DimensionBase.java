@@ -16,11 +16,11 @@ public abstract class DimensionBase implements DimensionInterface {
     private String path;
     private short worldHeight;
     private short maxLandheight;
-    private short seaLevel;
+    private byte seaLevel;
     private Dimension dimension;
     protected static final ArrayList<BiomeInterface> biomes = new ArrayList<BiomeInterface>();
 
-    public DimensionBase(Dimension dimension, int seed, String path, short worldHeight, short maxLandheight, short seaLevel) {
+    public DimensionBase(Dimension dimension, int seed, String path, short worldHeight, short maxLandheight, byte seaLevel) {
         this.dimension = dimension;
         this.seed = seed;
         this.path = path;
@@ -30,7 +30,7 @@ public abstract class DimensionBase implements DimensionInterface {
         FileSystemHelper.createDirectoryIfNeeded(path);
     }
 
-    public Chunk GetChunk(int seed, Coordinate dimensionCoordinate) {
+    public Chunk getChunk(int seed, Coordinate dimensionCoordinate) {
         int chunkCoordinateX = Chunk.getChunkCoordinateXFromDimensionCoordinateX(dimensionCoordinate);
         int chunkCoordinateZ = Chunk.getChunkCoordinateZFromDimensionCoordinateZ(dimensionCoordinate);
         Chunk chunk = Chunk.getExistingChunk(chunkCoordinateX, chunkCoordinateZ);
@@ -42,6 +42,22 @@ public abstract class DimensionBase implements DimensionInterface {
         return chunk;
     }
 
+    public Chunk[][] getChunkArray(int seed, Coordinate dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ) {
+        int chunkCoordinateX = Chunk.getChunkCoordinateXFromDimensionCoordinateX(dimensionCoordinate);
+        int chunkCoordinateZ = Chunk.getChunkCoordinateZFromDimensionCoordinateZ(dimensionCoordinate);
+
+        Chunk[][] chunks = new Chunk[arrayBoundsX][arrayBoundsZ];
+        Coordinate coordinateToGet = new Coordinate(0, 0, 0);
+        for (int x = 0; x < arrayBoundsX; x++) {
+            for (int z = 0; z < arrayBoundsZ; z++) {
+                coordinateToGet.x = chunkCoordinateX + x;
+                coordinateToGet.z = chunkCoordinateZ + z;
+                chunks[x][z] = getChunk(seed, coordinateToGet);
+            }
+        }
+        return chunks;
+    }
+
     public short getWorldHeight() {
         return worldHeight;
     }
@@ -50,7 +66,7 @@ public abstract class DimensionBase implements DimensionInterface {
         return maxLandheight;
     }
 
-    public short getSeaLevel() {
+    public byte getSeaLevel() {
         return seaLevel;
     }
 

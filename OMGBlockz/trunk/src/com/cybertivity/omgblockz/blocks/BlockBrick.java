@@ -26,11 +26,11 @@ public class BlockBrick extends BlockBase {
     }
 
     private void setAttributes() {
-        instance.variantId = 0;
-        instance.height = 1;
-        instance.width = 1;
-        instance.blockId = 45;
-        instance.friendlyName = "Bricks";
-        instance.commandName = "brick_block";
+        variantId = 0;
+        height = 1;
+        width = 1;
+        blockId = 45;
+        friendlyName = "Bricks";
+        commandName = "brick_block";
     }
 }

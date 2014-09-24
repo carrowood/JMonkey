@@ -7,4 +7,6 @@ import com.cybertivity.omgblockz.utility.Coordinate;
 public interface BiomeInterface {
 
     public Chunk GetChunk(int seed, int chunkCoordinateX, int chunkCoordinateZ, DimensionBase dimension);
+
+    Chunk[][] getChunkArray(int seed, int chunkCoordinateX, int chunkCoordinateZ, int arrayBoundsX, int arrayBoundsZ, DimensionBase dimension);
 }

@@ -19,6 +19,7 @@ public class Chunk {
     private Date lastModified = new Date();
     private Date lastAccessed = new Date();
     private String saveDirectoryPath;
+    private short YMax = 0;
 
     private static Chunk loadfromDisk(int chunkCoordinateX, int chunkCoordinateZ) {
         //TODO Chunk checkDisk(int chunkCoordinateX, int chunkCoordinateZ)
@@ -34,6 +35,7 @@ public class Chunk {
     private int chunkCoordinateZ;
 
     public Chunk(Coordinate blockCoordinateInDimension, short worldHeight, String saveDirectoryPath) {
+        this.YMax = worldHeight;
         blockIDs = new short[CHUNK_WIDTH_IN_BLOCKS][worldHeight][CHUNK_WIDTH_IN_BLOCKS];
         chunkCoordinateX = getChunkCoordinateXFromDimensionCoordinateX(blockCoordinateInDimension);
         chunkCoordinateZ = getChunkCoordinateZFromDimensionCoordinateZ(blockCoordinateInDimension);
@@ -41,6 +43,7 @@ public class Chunk {
     }
 
     public Chunk(int chunkCoordinateX, int chunkCoordinateZ, short worldHeight, String saveDirectoryPath) {
+        this.YMax = worldHeight;
         blockIDs = new short[CHUNK_WIDTH_IN_BLOCKS][worldHeight][CHUNK_WIDTH_IN_BLOCKS];
         chunkCoordinateX = chunkCoordinateX;
         chunkCoordinateZ = chunkCoordinateZ;
@@ -55,6 +58,17 @@ public class Chunk {
         return (int) (float) dimensionCoordinate.z / Chunk.CHUNK_WIDTH_IN_BLOCKS;
     }
 
+    public short getBlockID(int x, int y, int z) {
+        return getBlockID(new Coordinate(x, y, z));
+    }
+
+    public short getBlockID(Coordinate coordinateWithInChunk) {
+        return blockIDs[coordinateWithInChunk.getX()][coordinateWithInChunk.getY()][coordinateWithInChunk.getZ()];
+    }
+
+    public BlockBase getBlock(int x, int y, int z) {
+        return getBlock(new Coordinate(x, y, z));
+    }
     public BlockBase getBlock(Coordinate coordinateWithInChunk) {
         short blockID = blockIDs[coordinateWithInChunk.getX()][coordinateWithInChunk.getY()][coordinateWithInChunk.getZ()];
         lastAccessed = new Date();
@@ -65,7 +79,7 @@ public class Chunk {
         blockIDs[coordinateWithInChunk.getX()][coordinateWithInChunk.getY()][coordinateWithInChunk.getZ()] = blockId;
         hasUnsavedChanges = true;
         lastModified = new Date();
-        lastAccessed = new Date();        
+        lastAccessed = new Date();
     }
 
     /**
@@ -100,12 +114,16 @@ public class Chunk {
         return chunkCoordinateZ;
     }
 
+    public short getYMax() {
+        return YMax;
+    }
+
     private class PersistanceManager {
 
         final Logger log = Logger.getLogger(PersistanceManager.class.getName());
         Timer timer = new Timer(true);
-        int allowedTimeForUnsavedData = 60 * 1000; //5 mins
-        int maxTimeToCache = 300 * 1000; //5 mins
+        int allowedTimeForUnsavedData = 60 * 1000; //60 secs
+        int maxTimeToCache = 5 * 60 * 1000; //5 mins
 
         public PersistanceManager() {
             timer.schedule(
@@ -126,18 +144,22 @@ public class Chunk {
                 HashMap<Integer, Chunk> chunkMapByZ = (HashMap<Integer, Chunk>) pairs1.getValue();
                 for (Map.Entry pairs2 : chunkMapByZ.entrySet()) {
                     Chunk chunk = (Chunk) pairs2.getValue();
-                    if (chunk.hasUnsavedChanges) {
-                        differenceInMillis = now.getTime() - chunk.lastModified.getTime();
-                        if(differenceInMillis>allowedTimeForUnsavedData){
-                            Chunk.saveToDisk(chunk);                            
-                            chunk.hasUnsavedChanges=false;
+                    if (chunk != null) {
+                        if (chunk.hasUnsavedChanges) {
+                            differenceInMillis = now.getTime() - chunk.lastModified.getTime();
+                            if (differenceInMillis > allowedTimeForUnsavedData) {
+                                Chunk.saveToDisk(chunk);
+                                chunk.hasUnsavedChanges = false;
+                            }
+                        } else {
+                            differenceInMillis = now.getTime() - chunk.lastAccessed.getTime();
+                            if (differenceInMillis > maxTimeToCache) {
+                                chunkMapByZ.remove((Integer) pairs2.getKey());
+                            }
                         }
-                    }else{
-                        
                     }
-                }sdfsfdsd
+                }
             }
         }
     }
-}
 }

@@ -9,7 +9,7 @@ public class Overworld extends DimensionBase {
 
     private static final short WORLD_HEIGHT = 256;
     private static final short MAX_LAND_HEIGHT = 256;
-    private static final short SEA_LEVEL = 64;
+    private static final byte SEA_LEVEL = 64;
 
     static {
         biomes.add(new Plains());

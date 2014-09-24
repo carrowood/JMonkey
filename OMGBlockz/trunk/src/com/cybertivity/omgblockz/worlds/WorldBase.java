@@ -33,23 +33,18 @@ public abstract class WorldBase implements WorldInterface {
         return seed.hashCode();
     }
 
-    public Chunk getChunk(Dimension dimension, Coordinate coordinate) {
-        DimensionInterface targetDimension = null;
-        for (int i = 0; i < dimensions.size(); i++) {
-            DimensionInterface testDimension = dimensions.get(i);
-            if (testDimension.getDimension()==dimension) {
-                targetDimension = testDimension;
-            }
-        }
-        if (targetDimension != null) {
-            return targetDimension.getChunk(coordinate);
-        } else {
-            throw new UnsupportedOperationException("Unknown Dimension");
-        }
+    public Chunk getChunk(Dimension dimension, Coordinate dimensionCoordinate) {
+        DimensionInterface targetDimension = DetermineDimension(dimension);
+        return targetDimension.getChunk(seed, dimensionCoordinate);
+    }
+
+    public Chunk[][] getChunkArray(Dimension dimension, Coordinate dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ) {
+        DimensionInterface targetDimension = DetermineDimension(dimension);
+        return targetDimension.getChunkArray(seed, dimensionCoordinate, arrayBoundsX, arrayBoundsZ);
     }
 
     @Override
-    public void Save() {
+    public void save() {
         throw new UnsupportedOperationException("Not Implemented");
     }
 
@@ -67,11 +62,25 @@ public abstract class WorldBase implements WorldInterface {
         return dimensions;
     }
 
-    public void AddDimension(DimensionInterface dimension) {
+    public void addDimension(DimensionInterface dimension) {
         this.dimensions.add(dimension);
     }
 
     public String getPath() {
         return path;
+    }
+
+    private DimensionInterface DetermineDimension(Dimension dimension) {
+        DimensionInterface targetDimension = null;
+        for (int i = 0; i < dimensions.size(); i++) {
+            DimensionInterface testDimension = dimensions.get(i);
+            if (testDimension.getDimension() == dimension) {
+                targetDimension = testDimension;
+            }
+        }
+        if (targetDimension == null) {
+            throw new UnsupportedOperationException("Unknown Dimension");
+        }
+        return targetDimension;
     }
 }

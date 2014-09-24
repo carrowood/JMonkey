@@ -31,6 +31,11 @@ public class MyBlockManager extends BlockManager {
         BlockManager.register(block);
     }
 
+    /***
+     * Will return NULL for air;
+     * @param blockID
+     * @return
+     */
     public static BlockBase GetInstanceByBlockID(short blockID) {
         return BLOCKS.get(blockID);
     }

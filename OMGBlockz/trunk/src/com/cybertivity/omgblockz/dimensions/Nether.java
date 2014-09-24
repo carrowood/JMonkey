@@ -6,7 +6,7 @@ public class Nether extends DimensionBase {
 
     private static final short WORLD_HEIGHT = 256;
     private static final short MAX_LAND_HEIGHT = 256;
-    private static final short SEA_LEVEL = -1;
+    private static final byte SEA_LEVEL = -1;
     
     public Nether(int seed, String path)  {
         super(Dimension.NETHER, seed,

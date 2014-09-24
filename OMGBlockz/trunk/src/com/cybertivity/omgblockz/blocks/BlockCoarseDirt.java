@@ -22,8 +22,8 @@ public class BlockCoarseDirt extends BlockDirt {
     }
 
     private void setAttributes() {
-        instance.variantId = 1;
-        instance.friendlyName = "Coarse Dirt";
+        variantId = 1;
+        friendlyName = "Coarse Dirt";
     }
 
     public static BlockCoarseDirt getInstance() {

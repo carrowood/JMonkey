@@ -20,12 +20,12 @@ public class BlockDirt extends BlockBase {
     }
 
     private void setAttributes() {
-        instance.variantId = 0;
-        instance.height = 1;
-        instance.width = 1;
-        instance.blockId = 3;
-        instance.friendlyName = "Dirt";
-        instance.commandName = "dirt";
+        variantId = 0;
+        height = 1;
+        width = 1;
+        blockId = 3;
+        friendlyName = "Dirt";
+        commandName = "dirt";
     }
 
     public static BlockDirt getInstance() {

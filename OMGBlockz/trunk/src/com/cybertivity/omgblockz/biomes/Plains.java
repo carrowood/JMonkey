@@ -17,7 +17,7 @@ public class Plains extends BiomeBase {
         allowedAdjacentBiomeIDs.add(biomeID);
     }
 
-    public Chunk[][] GetChunkArray(int seed, int chunkCoordinateX, int chunkCoordinateZ, int arrayBoundsX, int arrayBoundsZ, DimensionBase dimension) {
+    public Chunk[][] getChunkArray(int seed, int chunkCoordinateX, int chunkCoordinateZ, int arrayBoundsX, int arrayBoundsZ, DimensionBase dimension) {
         Chunk[][] chunks = new Chunk[arrayBoundsX][arrayBoundsZ];
         Chunk chunk;
         for (int x = 0; x < arrayBoundsX; x++) {
@@ -33,8 +33,9 @@ public class Plains extends BiomeBase {
         Chunk chunk = Chunk.getExistingChunk(chunkCoordinateX, chunkCoordinateZ);
         if (chunk == null) {
             chunk = new Chunk(chunkCoordinateX, chunkCoordinateZ, dimension.getWorldHeight(),dimension.getPath());
-//            generateSolidTerrain(seed, (short) 245, dimension.getMaxLandheight(),
-//                    chunk, BlockGrass.getInstance().getBlockId(), dimension.getWorldHeight(), dimension.getSeaLevel());
+            generateSolidTerrain(seed, (short) 245, dimension.getMaxLandheight(),
+                    chunk, BlockGrass.getInstance().getBlockId(), dimension.getWorldHeight(), dimension.getSeaLevel());
+
 //            generateSolidTerrain(seed, (short) 205, (short) 115,
 //                    chunk, BlockStone.getInstance().getBlockId(), dimension.getWorldHeight(), dimension.getSeaLevel());
 //            

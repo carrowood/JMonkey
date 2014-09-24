@@ -49,7 +49,7 @@ public abstract class BiomeBase implements BiomeInterface {
                 }
                 if (seaLevel > 0) {
                     //TODO: Fix - incorrect id for blockwater
-                    short blockWaterID = (short)200;//BlockWater.getInstance().getBlockId()
+                    short blockWaterID = BlockWater.getInstance().getBlockId();
                     while (y <= seaLevel) {
                         chunk.setBlock(new Coordinate(xOffset, y, zOffset), blockWaterID);
                         y++;

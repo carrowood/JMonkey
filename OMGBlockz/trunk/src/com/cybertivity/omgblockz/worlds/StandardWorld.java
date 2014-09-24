@@ -12,8 +12,8 @@ public class StandardWorld extends WorldBase {
         Overworld overworld = new Overworld(super.getSeed(), this.getPath());
         Nether nether = new Nether(super.getSeed(), this.getPath());
         TheEnd theEnd = new TheEnd(super.getSeed(), this.getPath());
-        this.AddDimension(overworld);
-        this.AddDimension(nether);
-        this.AddDimension(theEnd);
+        this.addDimension(overworld);
+        this.addDimension(nether);
+        this.addDimension(theEnd);
     }
 }
