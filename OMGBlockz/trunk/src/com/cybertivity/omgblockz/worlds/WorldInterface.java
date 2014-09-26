@@ -2,7 +2,7 @@ package com.cybertivity.omgblockz.worlds;
 
 import com.cybertivity.omgblockz.Chunk;
 import com.cybertivity.omgblockz.dimensions.*;
-import com.cybertivity.omgblockz.utility.Coordinate;
+import com.cybertivity.omgblockz.utility.Coordinate3D;
 import java.util.ArrayList;
 
 public interface WorldInterface {
@@ -25,7 +25,7 @@ public interface WorldInterface {
      */
     void addDimension(DimensionInterface dimension);
 
-    Chunk getChunk(Dimension dimension, Coordinate coordinate);
+    Chunk getChunk(Dimension dimension, Coordinate3D coordinate);
 
-    Chunk[][] getChunkArray(Dimension dimension, Coordinate dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ);
+    Chunk[][] getChunkArray(Dimension dimension, Coordinate3D dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ);
 }

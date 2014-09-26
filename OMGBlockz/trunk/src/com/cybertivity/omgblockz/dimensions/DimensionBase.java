@@ -30,7 +30,7 @@ public abstract class DimensionBase implements DimensionInterface {
         FileSystemHelper.createDirectoryIfNeeded(path);
     }
 
-    public Chunk getChunk(int seed, Coordinate dimensionCoordinate) {
+    public Chunk getChunk(int seed, Coordinate3D dimensionCoordinate) {
         int chunkCoordinateX = Chunk.getChunkCoordinateXFromDimensionCoordinateX(dimensionCoordinate);
         int chunkCoordinateZ = Chunk.getChunkCoordinateZFromDimensionCoordinateZ(dimensionCoordinate);
         Chunk chunk = Chunk.getExistingChunk(chunkCoordinateX, chunkCoordinateZ);
@@ -42,16 +42,16 @@ public abstract class DimensionBase implements DimensionInterface {
         return chunk;
     }
 
-    public Chunk[][] getChunkArray(int seed, Coordinate dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ) {
+    public Chunk[][] getChunkArray(int seed, Coordinate3D dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ) {
         int chunkCoordinateX = Chunk.getChunkCoordinateXFromDimensionCoordinateX(dimensionCoordinate);
         int chunkCoordinateZ = Chunk.getChunkCoordinateZFromDimensionCoordinateZ(dimensionCoordinate);
 
         Chunk[][] chunks = new Chunk[arrayBoundsX][arrayBoundsZ];
-        Coordinate coordinateToGet = new Coordinate(0, 0, 0);
+        Coordinate3D coordinateToGet = new Coordinate3D(0, 0, 0);
         for (int x = 0; x < arrayBoundsX; x++) {
             for (int z = 0; z < arrayBoundsZ; z++) {
-                coordinateToGet.x = chunkCoordinateX + x;
-                coordinateToGet.z = chunkCoordinateZ + z;
+                coordinateToGet.x = chunkCoordinateX + (x * Chunk.CHUNK_WIDTH_IN_BLOCKS);
+                coordinateToGet.z = chunkCoordinateZ + (z * Chunk.CHUNK_WIDTH_IN_BLOCKS);
                 chunks[x][z] = getChunk(seed, coordinateToGet);
             }
         }

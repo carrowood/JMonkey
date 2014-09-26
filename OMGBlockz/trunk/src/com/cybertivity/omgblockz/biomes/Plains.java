@@ -5,7 +5,7 @@ import com.cubes.Vector3Int;
 import com.cybertivity.omgblockz.Chunk;
 import com.cybertivity.omgblockz.blocks.*;
 import com.cybertivity.omgblockz.dimensions.DimensionBase;
-import com.cybertivity.omgblockz.utility.Coordinate;
+import com.cybertivity.omgblockz.utility.Coordinate3D;
 
 public class Plains extends BiomeBase {
 
@@ -29,20 +29,26 @@ public class Plains extends BiomeBase {
     }
 
     public Chunk GetChunk(int seed, int chunkCoordinateX, int chunkCoordinateZ,
-            DimensionBase dimension) { 
+            DimensionBase dimension) {
         Chunk chunk = Chunk.getExistingChunk(chunkCoordinateX, chunkCoordinateZ);
         if (chunk == null) {
-            chunk = new Chunk(chunkCoordinateX, chunkCoordinateZ, dimension.getWorldHeight(),dimension.getPath());
-            generateSolidTerrain(seed, (short) 245, dimension.getMaxLandheight(),
-                    chunk, BlockGrass.getInstance().getBlockId(), dimension.getWorldHeight(), dimension.getSeaLevel());
 
-//            generateSolidTerrain(seed, (short) 205, (short) 115,
-//                    chunk, BlockStone.getInstance().getBlockId(), dimension.getWorldHeight(), dimension.getSeaLevel());
-//            
-//            //TODO: Replace brick with Bedrock
-//            generateSolidTerrain(seed, (short) 3, (short) 4,
-//                    chunk, BlockBrick.getInstance().getBlockId(), dimension.getWorldHeight(), dimension.getSeaLevel());
-            
+            chunk = new Chunk(chunkCoordinateX, chunkCoordinateZ, dimension.getWorldHeight(), dimension.getPath());
+
+            //frequency - lower is choppier, higher is smoother
+            //set the sea level on the top most layer
+            generateSolidTerrain(seed, (short) 220, (short) 80,
+                    chunk, BlockGrass.getInstance().getBlockId(), dimension.getWorldHeight(), dimension.getSeaLevel());
+            //Note that now we change the amplitude to be lower
+            //we also change the frequency so we dont have the same pattern on top of the previous layer
+            generateSolidTerrain(seed, (short) 150, (short) 72,
+                    chunk, BlockStone.getInstance().getBlockId(), dimension.getWorldHeight());
+
+            //TODO: Replace brick with Bedrock
+            generateSolidTerrain(seed, (short) 3, (short) 4,
+                    chunk, BlockBrick.getInstance().getBlockId(), dimension.getWorldHeight());
+
+
             //TODO: GenerateSparseTerrain
             //GenerateSparseTerrain(seed, 40f, minXYZ, maxXYZ, blockTerrain, Block_Wood.class);  //pretend its bedrock
 

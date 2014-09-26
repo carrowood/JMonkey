@@ -1,7 +1,7 @@
 package com.cybertivity.omgblockz;
 
 import com.cybertivity.omgblockz.blocks.*;
-import com.cybertivity.omgblockz.utility.Coordinate;
+import com.cybertivity.omgblockz.utility.Coordinate3D;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,7 +34,7 @@ public class Chunk {
     private int chunkCoordinateX;
     private int chunkCoordinateZ;
 
-    public Chunk(Coordinate blockCoordinateInDimension, short worldHeight, String saveDirectoryPath) {
+    public Chunk(Coordinate3D blockCoordinateInDimension, short worldHeight, String saveDirectoryPath) {
         this.YMax = worldHeight;
         blockIDs = new short[CHUNK_WIDTH_IN_BLOCKS][worldHeight][CHUNK_WIDTH_IN_BLOCKS];
         chunkCoordinateX = getChunkCoordinateXFromDimensionCoordinateX(blockCoordinateInDimension);
@@ -45,37 +45,37 @@ public class Chunk {
     public Chunk(int chunkCoordinateX, int chunkCoordinateZ, short worldHeight, String saveDirectoryPath) {
         this.YMax = worldHeight;
         blockIDs = new short[CHUNK_WIDTH_IN_BLOCKS][worldHeight][CHUNK_WIDTH_IN_BLOCKS];
-        chunkCoordinateX = chunkCoordinateX;
-        chunkCoordinateZ = chunkCoordinateZ;
+        this.chunkCoordinateX = chunkCoordinateX;
+        this.chunkCoordinateZ = chunkCoordinateZ;
         this.saveDirectoryPath = saveDirectoryPath;
     }
 
-    public static int getChunkCoordinateXFromDimensionCoordinateX(Coordinate dimensionCoordinate) {
+    public static int getChunkCoordinateXFromDimensionCoordinateX(Coordinate3D dimensionCoordinate) {
         return (int) (float) dimensionCoordinate.x / Chunk.CHUNK_WIDTH_IN_BLOCKS;
     }
 
-    public static int getChunkCoordinateZFromDimensionCoordinateZ(Coordinate dimensionCoordinate) {
+    public static int getChunkCoordinateZFromDimensionCoordinateZ(Coordinate3D dimensionCoordinate) {
         return (int) (float) dimensionCoordinate.z / Chunk.CHUNK_WIDTH_IN_BLOCKS;
     }
 
     public short getBlockID(int x, int y, int z) {
-        return getBlockID(new Coordinate(x, y, z));
+        return getBlockID(new Coordinate3D(x, y, z));
     }
 
-    public short getBlockID(Coordinate coordinateWithInChunk) {
+    public short getBlockID(Coordinate3D coordinateWithInChunk) {
         return blockIDs[coordinateWithInChunk.getX()][coordinateWithInChunk.getY()][coordinateWithInChunk.getZ()];
     }
 
     public BlockBase getBlock(int x, int y, int z) {
-        return getBlock(new Coordinate(x, y, z));
+        return getBlock(new Coordinate3D(x, y, z));
     }
-    public BlockBase getBlock(Coordinate coordinateWithInChunk) {
+    public BlockBase getBlock(Coordinate3D coordinateWithInChunk) {
         short blockID = blockIDs[coordinateWithInChunk.getX()][coordinateWithInChunk.getY()][coordinateWithInChunk.getZ()];
         lastAccessed = new Date();
         return MyBlockManager.GetInstanceByBlockID(blockID);
     }
 
-    public void setBlock(Coordinate coordinateWithInChunk, short blockId) {
+    public void setBlock(Coordinate3D coordinateWithInChunk, short blockId) {
         blockIDs[coordinateWithInChunk.getX()][coordinateWithInChunk.getY()][coordinateWithInChunk.getZ()] = blockId;
         hasUnsavedChanges = true;
         lastModified = new Date();

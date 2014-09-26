@@ -4,31 +4,44 @@ import com.cubes.*;
 import com.cybertivity.omgblockz.blocks.*;
 import com.cybertivity.omgblockz.worlds.*;
 import com.cybertivity.omgblockz.dimensions.*;
-import com.cybertivity.omgblockz.utility.Coordinate;
+import com.cybertivity.omgblockz.utility.*;
 import com.jme3.app.SimpleApplication;
+import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
+import com.jme3.bullet.control.CharacterControl;
 import com.jme3.collision.CollisionResults;
 import com.jme3.font.BitmapText;
 import com.jme3.input.*;
 import com.jme3.input.controls.*;
+import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.*;
+import com.jme3.post.*;
 import com.jme3.renderer.RenderManager;
 import com.jme3.scene.*;
 import com.jme3.scene.shape.*;
+import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.system.AppSettings;
+import com.jme3.util.SkyFactory;
+import com.jme3.water.WaterFilter;
 import jme3utilities.TimeOfDay;
 import java.io.IOException;
-import java.util.Calendar;
+import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import jme3utilities.sky.SkyControl;
 
-public class Main extends SimpleApplication {
+public class Main extends SimpleApplication implements ActionListener {
 
+    private final Vector3Int terrainSize = new Vector3Int(100, 30, 100);
+    private BulletAppState bulletAppState;
+    private CharacterControl playerControl;
+    private Vector3f walkDirection = new Vector3f();
+    private boolean[] arrowKeys = new boolean[4];
     private static FileHandler fh = null;
-    private CubesSettings cubeSettings;
+    private CubesSettings cubesSettings;
     private BlockTerrainControl blockTerrain;
     private Node terrainNode;
     private static final int BLOCK_SIZE = 4;
@@ -61,25 +74,31 @@ public class Main extends SimpleApplication {
         InitCubes();
         SetupSky();
         //AttachTestBox();
-        initNewWorld();
+        initNewWorld(null, "D:\\temp\\OMGBlockz", "Test1");
         initCrossHairs();
         initMark();
         initKeys();
-
+        initializeEnvironment(this);
+        initializeWater(this);
+        //initPlayer();
+        Vector3f cameraLocation = new Vector3f(0, 20, 0);
+        cam.setLocation(cameraLocation);
+        //cam.lookAtDirection(new Vector3f(64 * BLOCK_SIZE, camHeight / 3, 64 * BLOCK_SIZE), Vector3f.UNIT_Y);
+        flyCam.setMoveSpeed(150);
+        cam.setFrustumFar(4000);
 
         //setDisplayStatView(false);
     }
 
-    @Override
-    public void simpleUpdate(float tpf) {
-        //TODO: add update code
-    }
-
-    @Override
-    public void simpleRender(RenderManager rm) {
-        //TODO: add render code
-    }
-
+//    @Override
+//    public void simpleUpdate(float tpf) {
+//        //TODO: add update code
+//    }
+//
+//    @Override
+//    public void simpleRender(RenderManager rm) {
+//        //TODO: add render code
+//    }
     private void AttachChunks(Chunk[][] chunks, int arrayBoundsX, int arrayBoundsZ) {
         for (int x = 0; x < arrayBoundsX; x++) {
             for (int z = 0; z < arrayBoundsZ; z++) {
@@ -91,7 +110,7 @@ public class Main extends SimpleApplication {
     private void AttachChunk(Chunk chunk) {
         if (chunk != null) {
             //for every X,Z in chunk...
-            Coordinate blockCoordinates = new Coordinate(0, 0, 0);
+            Coordinate3D blockCoordinates = new Coordinate3D(0, 0, 0);
             for (int xOffset = 0; xOffset < Chunk.CHUNK_WIDTH_IN_BLOCKS; xOffset++) {
                 for (int zOffset = 0; zOffset < Chunk.CHUNK_WIDTH_IN_BLOCKS; zOffset++) {
                     blockCoordinates.x = (chunk.getChunkCoordinateX() * Chunk.CHUNK_WIDTH_IN_BLOCKS) + xOffset;
@@ -105,17 +124,57 @@ public class Main extends SimpleApplication {
                 }
             }
         }
+    }
+    private static final Vector3f lightDirection = new Vector3f(-0.8f, -1, -0.8f).normalizeLocal();
 
+    public static void initializeEnvironment(SimpleApplication simpleApplication) {
+        DirectionalLight directionalLight = new DirectionalLight();
+        directionalLight.setDirection(lightDirection);
+        directionalLight.setColor(new ColorRGBA(1f, 1f, 1f, 1.0f));
+        simpleApplication.getRootNode().addLight(directionalLight);
+        //simpleApplication.getRootNode().attachChild(SkyFactory.createSky(simpleApplication.getAssetManager(), "Textures/cubes/sky.jpg", true));
+
+        DirectionalLightShadowRenderer directionalLightShadowRenderer = new DirectionalLightShadowRenderer(simpleApplication.getAssetManager(), 2048, 3);
+        directionalLightShadowRenderer.setLight(directionalLight);
+        directionalLightShadowRenderer.setShadowIntensity(0.3f);
+        simpleApplication.getViewPort().addProcessor(directionalLightShadowRenderer);
+    }
+
+//    private void initPlayer() {
+//        playerControl = new CharacterControl(new CapsuleCollisionShape((cubesSettings.getBlockSize() / 2), cubesSettings.getBlockSize() * 2), 0.05f);
+//        playerControl.setJumpSpeed(25);
+//        playerControl.setFallSpeed(20);
+//        playerControl.setGravity(70);
+//        playerControl.setPhysicsLocation(new Vector3f(5, terrainSize.getY() + 5, 5).mult(cubesSettings.getBlockSize()));
+//        bulletAppState.getPhysicsSpace().add(playerControl);
+//    }
+
+    public static void initializeWater(SimpleApplication simpleApplication) {
+        WaterFilter waterFilter = new WaterFilter(simpleApplication.getRootNode(), lightDirection);
+        getFilterPostProcessor(simpleApplication).addFilter(waterFilter);
+    }
+
+    private static FilterPostProcessor getFilterPostProcessor(SimpleApplication simpleApplication) {
+        List<SceneProcessor> sceneProcessors = simpleApplication.getViewPort().getProcessors();
+        for (int i = 0; i < sceneProcessors.size(); i++) {
+            SceneProcessor sceneProcessor = sceneProcessors.get(i);
+            if (sceneProcessor instanceof FilterPostProcessor) {
+                return (FilterPostProcessor) sceneProcessor;
+            }
+        }
+        FilterPostProcessor filterPostProcessor = new FilterPostProcessor(simpleApplication.getAssetManager());
+        simpleApplication.getViewPort().addProcessor(filterPostProcessor);
+        return filterPostProcessor;
     }
 
     private void InitCubes() {
         blockManager = new MyBlockManager();
-        cubeSettings = new CubesSettings(this);
-        cubeSettings.setBlockSize(BLOCK_SIZE);
+        cubesSettings = new CubesSettings(this);
+        cubesSettings.setBlockSize(BLOCK_SIZE);
 
         //Failuer to do this next line results in an illeagal stateException:
         //no material is set for geometery.
-        cubeSettings.setDefaultBlockMaterial("Textures/cubes/terrain.png");
+        cubesSettings.setDefaultBlockMaterial("Textures/cubes/terrain.png");
     }
 
     private void AttachTestBox() {
@@ -202,9 +261,34 @@ public class Main extends SimpleApplication {
     /** Declaring the "Shoot" action and mapping to its triggers. */
     private void initKeys() {
         inputManager.addMapping("Shoot",
-                new KeyTrigger(KeyInput.KEY_SPACE), // trigger 1: spacebar
+                //new KeyTrigger(KeyInput.KEY_SPACE), // trigger 1: spacebar
                 new MouseButtonTrigger(MouseInput.BUTTON_LEFT)); // trigger 2: left-button click
         inputManager.addListener(actionListener, "Shoot");
+        inputManager.addMapping("move_left", new KeyTrigger(KeyInput.KEY_A));
+        inputManager.addMapping("move_right", new KeyTrigger(KeyInput.KEY_D));
+        inputManager.addMapping("move_up", new KeyTrigger(KeyInput.KEY_SPACE));
+        inputManager.addMapping("move_down", new KeyTrigger(KeyInput.KEY_LSHIFT));
+        //inputManager.addMapping("jump", new KeyTrigger(KeyInput.KEY_SPACE));
+        inputManager.addListener(actionListener, "move_left");
+        inputManager.addListener(actionListener, "move_right");
+        inputManager.addListener(actionListener, "move_up");
+        inputManager.addListener(actionListener, "move_down");
+        inputManager.addListener(actionListener, "jump");
+    }
+
+    @Override
+    public void onAction(String actionName, boolean value, float lastTimePerFrame) {
+        if (actionName.equals("move_up")) {
+            arrowKeys[0] = value;
+        } else if (actionName.equals("move_right")) {
+            arrowKeys[1] = value;
+        } else if (actionName.equals("move_left")) {
+            arrowKeys[3] = value;
+        } else if (actionName.equals("move_down")) {
+            arrowKeys[2] = value;
+        } else if (actionName.equals("jump")) {
+            playerControl.jump();
+        }
     }
     /** Defining the "Shoot" action: Determine what was hit and how to respond. */
     private ActionListener actionListener = new ActionListener() {
@@ -251,20 +335,20 @@ public class Main extends SimpleApplication {
         }
     };
 
-    private void initNewWorld() {
+    private void initNewWorld(String seed, String path, String name) {
         Vector3Int numberOfChunks = new Vector3Int(4, 1, 4);
-        blockTerrain = new BlockTerrainControl(cubeSettings, numberOfChunks);
+        blockTerrain = new BlockTerrainControl(cubesSettings, numberOfChunks);
         try {
-            StandardWorld world = new StandardWorld("TunaBomber", "D:\\temp\\OMGBlockz\\Saves", "Test1");
+            StandardWorld world = new StandardWorld(seed, path + FileSystemHelper.GetFileSeparator() + "Saves", name);
             int arrayBoundsX = 4;
             int arrayBoundsY = 4;
-            Chunk[][] chunks = world.getChunkArray(Dimension.OVERWORLD, new Coordinate(0, 0, 0), arrayBoundsX, arrayBoundsY);
+            Chunk[][] chunks = world.getChunkArray(Dimension.OVERWORLD, new Coordinate3D(0, 0, 0), arrayBoundsX, arrayBoundsY);
             AttachChunks(chunks, arrayBoundsX, arrayBoundsY);
 
             terrainNode = new Node();
             terrainNode.addControl(blockTerrain);
             rootNode.attachChild(terrainNode);
-
+            log.log(Level.INFO, "Successfully created new world: " + name);
         } catch (IOException ex) {
             log.log(Level.SEVERE, "Could not create new world structure on disk. Exiting", ex);
             this.stop();

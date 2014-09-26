@@ -10,7 +10,7 @@ public class BiomeManager {
     private BiomeManager() {
     }
 
-    static BiomeInterface DetermineBiome(int seed, Coordinate worldPosition, DimensionInterface dimension) {
+    static BiomeInterface DetermineBiome(int seed, Coordinate3D worldPosition, DimensionInterface dimension) {
         return new Plains();
     }
 
@@ -21,7 +21,7 @@ public class BiomeManager {
         return instance;
     }
 
-    public BiomeInterface GetBiome(int seed, Coordinate dimensionCoordinate) {
+    public BiomeInterface GetBiome(int seed, Coordinate3D dimensionCoordinate) {
 
         //first, return from cache if loaded; if not then
         //use 2D moise to get -1 to 1

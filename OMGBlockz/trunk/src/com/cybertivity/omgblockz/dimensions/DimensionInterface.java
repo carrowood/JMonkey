@@ -1,7 +1,7 @@
 package com.cybertivity.omgblockz.dimensions;
 
 import com.cybertivity.omgblockz.Chunk;
-import com.cybertivity.omgblockz.utility.Coordinate;
+import com.cybertivity.omgblockz.utility.Coordinate3D;
 
 public interface DimensionInterface {
 
@@ -11,9 +11,9 @@ public interface DimensionInterface {
 
     short getWorldHeight();
 
-    public Chunk getChunk(int seed, Coordinate worldCoordinate);
+    public Chunk getChunk(int seed, Coordinate3D worldCoordinate);
 
-    Chunk[][] getChunkArray(int seed, Coordinate dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ);
+    Chunk[][] getChunkArray(int seed, Coordinate3D dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ);
 
     Dimension getDimension();
 

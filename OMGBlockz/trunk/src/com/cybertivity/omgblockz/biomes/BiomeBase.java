@@ -3,7 +3,7 @@ package com.cybertivity.omgblockz.biomes;
 import com.cubes.*;
 import com.cybertivity.omgblockz.Chunk;
 import com.cybertivity.omgblockz.blocks.*;
-import com.cybertivity.omgblockz.utility.Coordinate;
+import com.cybertivity.omgblockz.utility.*;
 import java.util.ArrayList;
 import org.j3d.texture.procedural.PerlinNoiseGenerator;
 
@@ -28,31 +28,38 @@ public abstract class BiomeBase implements BiomeInterface {
     protected void generateSolidTerrain(int seed, short frequency, short amplitude,
             Chunk chunk, short blockId, short worldHeight, byte seaLevel) {
 
-        PerlinNoiseGenerator octave0 = new PerlinNoiseGenerator(seed);
+        Perlin2D octave0 = new Perlin2D(seed, frequency);
         int dimensionPosX = chunk.getChunkCoordinateX() * Chunk.CHUNK_WIDTH_IN_BLOCKS;
         int y;
         int dimensionPosZ = chunk.getChunkCoordinateZ() * Chunk.CHUNK_WIDTH_IN_BLOCKS;
         double noise;
 
-        Coordinate dimensionCoordinate = new Coordinate(dimensionPosX, 0, dimensionPosZ);
+        Coordinate3D dimensionCoordinate = new Coordinate3D(dimensionPosX, 0, dimensionPosZ);
+
 
         //for every X,Z in chunk...
         for (int xOffset = 0; xOffset < Chunk.CHUNK_WIDTH_IN_BLOCKS; xOffset++) {
             for (int zOffset = 0; zOffset < Chunk.CHUNK_WIDTH_IN_BLOCKS; zOffset++) {
                 //get the noise at X,Z to determine the height
-                noise = amplitude * octave0.noise2(dimensionCoordinate.getX() + xOffset,
-                        dimensionCoordinate.getZ() + zOffset);
+                noise = amplitude * octave0.getNoiseLevelAtPosition(
+                        (dimensionCoordinate.getX() + xOffset),
+                        (dimensionCoordinate.getZ() + zOffset));
 
                 //Set all blocks at X,Z from bottom up to noise level
-                for (y = 0; y < noise; y++) {
-                    chunk.setBlock(new Coordinate(xOffset, y, zOffset), blockId);
-                }
-                if (seaLevel > 0) {
-                    //TODO: Fix - incorrect id for blockwater
-                    short blockWaterID = BlockWater.getInstance().getBlockId();
-                    while (y <= seaLevel) {
-                        chunk.setBlock(new Coordinate(xOffset, y, zOffset), blockWaterID);
-                        y++;
+                if (noise <= 0) {
+                    chunk.setBlock(new Coordinate3D(xOffset, 0, zOffset), blockId);
+                } else {
+                    for (y = 0; y < noise; y++) {
+                        if (y < worldHeight) {
+                            chunk.setBlock(new Coordinate3D(xOffset, y, zOffset), blockId);
+                        }
+                    }
+                    if (seaLevel > 0) {
+                        short blockWaterID = BlockWater.getInstance().getBlockId();
+                        while (y <= seaLevel) {
+                            chunk.setBlock(new Coordinate3D(xOffset, y, zOffset), blockWaterID);
+                            y++;
+                        }
                     }
                 }
             }

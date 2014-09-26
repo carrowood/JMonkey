@@ -1,6 +1,8 @@
 package com.cybertivity.omgblockz.blocks;
 
 import com.cubes.*;
+import static com.cubes.Block.Face.Bottom;
+import static com.cubes.Block.Face.Top;
 
 public class BlockGrass extends BlockBase {
 
@@ -35,5 +37,20 @@ public class BlockGrass extends BlockBase {
             instance = new BlockGrass();
         }
         return instance;
+    }
+
+    @Override
+    protected int getSkinIndex(BlockChunkControl chunk, Vector3Int location, Block.Face face) {
+        if (chunk.isBlockOnSurface(location)) {
+            switch (face) {
+                case Top:
+                    return 0;
+
+                case Bottom:
+                    return 2;
+            }
+            return 1;
+        }
+        return 2;
     }
 }

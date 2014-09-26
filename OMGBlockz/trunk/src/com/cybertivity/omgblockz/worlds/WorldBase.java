@@ -33,12 +33,12 @@ public abstract class WorldBase implements WorldInterface {
         return seed.hashCode();
     }
 
-    public Chunk getChunk(Dimension dimension, Coordinate dimensionCoordinate) {
+    public Chunk getChunk(Dimension dimension, Coordinate3D dimensionCoordinate) {
         DimensionInterface targetDimension = DetermineDimension(dimension);
         return targetDimension.getChunk(seed, dimensionCoordinate);
     }
 
-    public Chunk[][] getChunkArray(Dimension dimension, Coordinate dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ) {
+    public Chunk[][] getChunkArray(Dimension dimension, Coordinate3D dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ) {
         DimensionInterface targetDimension = DetermineDimension(dimension);
         return targetDimension.getChunkArray(seed, dimensionCoordinate, arrayBoundsX, arrayBoundsZ);
     }

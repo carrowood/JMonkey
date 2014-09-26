@@ -8,7 +8,7 @@ import java.util.ArrayList;
 public class Overworld extends DimensionBase {
 
     private static final short WORLD_HEIGHT = 256;
-    private static final short MAX_LAND_HEIGHT = 256;
+    private static final short MAX_LAND_HEIGHT = 128;
     private static final byte SEA_LEVEL = 64;
 
     static {

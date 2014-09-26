@@ -1,7 +1,7 @@
 package com.cybertivity.omgblockz.worlds;
 
 import com.cybertivity.omgblockz.dimensions.*;
-import com.cybertivity.omgblockz.utility.Coordinate;
+import com.cybertivity.omgblockz.utility.Coordinate3D;
 import java.io.IOException;
 
 public class StandardWorld extends WorldBase {

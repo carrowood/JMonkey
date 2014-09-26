@@ -2,7 +2,7 @@ package com.cybertivity.omgblockz.biomes;
 
 import com.cybertivity.omgblockz.Chunk;
 import com.cybertivity.omgblockz.dimensions.DimensionBase;
-import com.cybertivity.omgblockz.utility.Coordinate;
+import com.cybertivity.omgblockz.utility.Coordinate3D;
 
 public interface BiomeInterface {
 
