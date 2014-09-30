@@ -474,7 +474,6 @@ public class Main extends SimpleApplication implements ActionListener {
             diagnosticsCoordinatesText = new BitmapText(guiFont, false);
             diagnosticsCoordinatesText.setSize(size);
             diagnosticsCoordinatesText.setColor(textColor);
-            diagnosticsCoordinatesText.setText(cam.getLocation().divide(BLOCK_SIZE).toString());
             diagnosticsCoordinatesText.setLocalTranslation(10, y, 10);
         }
         y = y - padding - diagnosticsCoordinatesText.getLineHeight();
@@ -482,7 +481,6 @@ public class Main extends SimpleApplication implements ActionListener {
             diagnosticsCoordinatesPointedAtText = new BitmapText(guiFont, false);
             diagnosticsCoordinatesText.setSize(size);
             diagnosticsCoordinatesPointedAtText.setColor(textColor);
-            diagnosticsCoordinatesPointedAtText.setText(cam.getLocation().divide(BLOCK_SIZE).toString());
             diagnosticsCoordinatesPointedAtText.setLocalTranslation(10, y, 10);
         }
         y = y - padding - diagnosticsCoordinatesPointedAtText.getLineHeight();
@@ -490,7 +488,6 @@ public class Main extends SimpleApplication implements ActionListener {
             diagnosticsBlockPointedAtText = new BitmapText(guiFont, false);
             diagnosticsCoordinatesText.setSize(size);
             diagnosticsBlockPointedAtText.setColor(textColor);
-            diagnosticsBlockPointedAtText.setText(cam.getLocation().divide(BLOCK_SIZE).toString());
             diagnosticsBlockPointedAtText.setLocalTranslation(10, y, 10);
         }
     }
