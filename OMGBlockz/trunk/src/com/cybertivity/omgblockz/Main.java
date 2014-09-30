@@ -48,8 +48,12 @@ public class Main extends SimpleApplication implements ActionListener {
     private MyBlockManager blockManager;
     private WorldInterface currentWorld;
     private DimensionInterface currentDimension;
-    private BitmapText coordinatesText;
     private TimeOfDay timeOfDay;
+    private boolean displayDiagnostics = false;
+    private boolean initialized = false;
+    private BitmapText diagnosticsCoordinatesText;
+    private BitmapText diagnosticsCoordinatesPointedAtText;
+    private BitmapText diagnosticsBlockPointedAtText;
 
     private static void configureLogging() {
         Logger l = Logger.getLogger("");
@@ -89,6 +93,7 @@ public class Main extends SimpleApplication implements ActionListener {
         int y = getTopMostEmptyBlock((int) playerStartPos.x, (int) playerStartPos.z, blockTerrain, currentDimension.getWorldHeight());
         playerStartPos.y = y + 5; //for a mini fall
         initPlayer(playerStartPos);
+        initDiagnosticsDisplay();
 
         //cam.lookAtDirection(new Vector3f(64 * BLOCK_SIZE, camHeight / 3, 64 * BLOCK_SIZE), Vector3f.UNIT_Y);
         flyCam.setMoveSpeed(150);
@@ -99,7 +104,8 @@ public class Main extends SimpleApplication implements ActionListener {
                 + 1); // (to get at eye level not feet level))
         Vector3f cameraLocation = new Vector3f(playerStartPos.x, camHeight, playerStartPos.z);
         cam.setLocation(cameraLocation);
-        InitHud(cameraLocation);
+
+        initialized = true;
 
     }
 
@@ -161,7 +167,7 @@ public class Main extends SimpleApplication implements ActionListener {
         walkDirection.setY(0);
         playerControl.setWalkDirection(walkDirection);
         cam.setLocation(playerControl.getPhysicsLocation());
-        coordinatesText.setText(playerControl.getPhysicsLocation().divide(BLOCK_SIZE).toString());
+        updateDiagnosticsDisplay();
     }
 
 //    @Override
@@ -264,7 +270,9 @@ public class Main extends SimpleApplication implements ActionListener {
         sc.setEnabled(true);
     }
 
-    /** A centred plus sign to help the player aim. */
+    /**
+     * A centred plus sign to help the player aim.
+     */
     protected void initCrossHairs() {
         guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
         BitmapText ch = new BitmapText(guiFont, false);
@@ -278,7 +286,9 @@ public class Main extends SimpleApplication implements ActionListener {
     }
     private Geometry mark;
 
-    /** A red ball that marks the last spot that was “hit” by the “shot”. */
+    /**
+     * A red ball that marks the last spot that was “hit” by the “shot”.
+     */
     protected void initMark() {
         Sphere sphere = new Sphere(30, 30, 0.2f);
         mark = new Geometry("BOOM!", sphere);
@@ -309,7 +319,9 @@ public class Main extends SimpleApplication implements ActionListener {
         return null;
     }
 
-    /** Declaring the "Shoot" action and mapping to its triggers. */
+    /**
+     * Declaring the "Shoot" action and mapping to its triggers.
+     */
     private void initKeys() {
 
         inputManager.addMapping("move_left", new KeyTrigger(KeyInput.KEY_A));
@@ -318,6 +330,7 @@ public class Main extends SimpleApplication implements ActionListener {
         inputManager.addMapping("move_down", new KeyTrigger(KeyInput.KEY_S));
         inputManager.addMapping("jump", new KeyTrigger(KeyInput.KEY_SPACE));
         inputManager.addMapping("full_screen", new KeyTrigger(KeyInput.KEY_F11));
+        inputManager.addMapping("show_diag", new KeyTrigger(KeyInput.KEY_F3));
         inputManager.addMapping("Shoot",
                 //new KeyTrigger(KeyInput.KEY_SPACE), // trigger 1: spacebar
                 new MouseButtonTrigger(MouseInput.BUTTON_LEFT)); // trigger 2: left-button click
@@ -328,13 +341,14 @@ public class Main extends SimpleApplication implements ActionListener {
         inputManager.addListener(this, "move_down");
         inputManager.addListener(this, "jump");
         inputManager.addListener(this, "full_screen");
-        inputManager.addListener(actionListener, "Shoot");
 
         inputManager.addListener(actionListener, "move_left");
         inputManager.addListener(actionListener, "move_right");
         inputManager.addListener(actionListener, "move_up");
         inputManager.addListener(actionListener, "move_down");
         inputManager.addListener(actionListener, "jump");
+        inputManager.addListener(actionListener, "Shoot");
+        inputManager.addListener(actionListener, "show_diag");
     }
 
     @Override
@@ -353,10 +367,14 @@ public class Main extends SimpleApplication implements ActionListener {
             toggleFullscreen();
         }
     }
-    /** Defining the "Shoot" action: Determine what was hit and how to respond. */
+    /**
+     * Defining the "Shoot" action: Determine what was hit and how to respond.
+     */
     private ActionListener actionListener = new ActionListener() {
         public void onAction(String name, boolean keyPressed, float tpf) {
-            if (name.equals("Shoot") && !keyPressed) {
+            if (name.equals("show_diag") && !keyPressed) {
+                toggleDiagnostics();
+            } else if (name.equals("Shoot") && !keyPressed) {
                 /*
                  // 1. Reset results list.
                  CollisionResults results = new CollisionResults();
@@ -433,7 +451,7 @@ public class Main extends SimpleApplication implements ActionListener {
         if (!settings.isFullscreen()) {
             GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
             DisplayMode[] modes = device.getDisplayModes();
-            int i = 0; // note: there are usually several, let's pick the first
+            int i = modes.length - 1; // note: there are usually several, let's pick the last
             settings.setResolution(modes[i].getWidth(), modes[i].getHeight());
             settings.setFrequency(modes[i].getRefreshRate());
             settings.setBitsPerPixel(modes[i].getBitDepth());
@@ -441,16 +459,114 @@ public class Main extends SimpleApplication implements ActionListener {
             this.setSettings(settings);
             this.restart(); // restart the context to apply changes
         } else {
+            settings.setFullscreen(false);
             //TODO: Remember previous settings and restore them.
         }
     }
 
-    private void InitHud(Vector3f location) {
-        coordinatesText = new BitmapText(guiFont, false);
-        coordinatesText.setSize(guiFont.getCharSet().getRenderedSize());      // font size
-        coordinatesText.setColor(ColorRGBA.Blue);                             // font color
-        coordinatesText.setText(location.divide(BLOCK_SIZE).toString());             // the text
-        coordinatesText.setLocalTranslation(10, settings.getHeight() - 10, 10); //hudText.getLineHeight(), 0); // position
-        guiNode.attachChild(coordinatesText);
+    private void initDiagnosticsDisplay() {
+        float y = settings.getHeight() - 10;
+        float padding = 7f;
+        float size = guiFont.getCharSet().getRenderedSize();
+        ColorRGBA textColor = ColorRGBA.Gray;
+
+        if (diagnosticsCoordinatesText == null) {
+            diagnosticsCoordinatesText = new BitmapText(guiFont, false);
+            diagnosticsCoordinatesText.setSize(size);
+            diagnosticsCoordinatesText.setColor(textColor);
+            diagnosticsCoordinatesText.setText(cam.getLocation().divide(BLOCK_SIZE).toString());
+            diagnosticsCoordinatesText.setLocalTranslation(10, y, 10);
+        }
+        y = y - padding - diagnosticsCoordinatesText.getLineHeight();
+        if (diagnosticsCoordinatesPointedAtText == null) {
+            diagnosticsCoordinatesPointedAtText = new BitmapText(guiFont, false);
+            diagnosticsCoordinatesText.setSize(size);
+            diagnosticsCoordinatesPointedAtText.setColor(textColor);
+            diagnosticsCoordinatesPointedAtText.setText(cam.getLocation().divide(BLOCK_SIZE).toString());
+            diagnosticsCoordinatesPointedAtText.setLocalTranslation(10, y, 10);
+        }
+        y = y - padding - diagnosticsCoordinatesPointedAtText.getLineHeight();
+        if (diagnosticsBlockPointedAtText == null) {
+            diagnosticsBlockPointedAtText = new BitmapText(guiFont, false);
+            diagnosticsCoordinatesText.setSize(size);
+            diagnosticsBlockPointedAtText.setColor(textColor);
+            diagnosticsBlockPointedAtText.setText(cam.getLocation().divide(BLOCK_SIZE).toString());
+            diagnosticsBlockPointedAtText.setLocalTranslation(10, y, 10);
+        }
+    }
+
+    private void toggleDiagnostics() {
+        displayDiagnostics = !displayDiagnostics;
+        if (displayDiagnostics) {
+            guiNode.attachChild(diagnosticsCoordinatesText);
+            guiNode.attachChild(diagnosticsCoordinatesPointedAtText);
+            guiNode.attachChild(diagnosticsBlockPointedAtText);
+        } else {
+            if (diagnosticsCoordinatesText != null) {
+                diagnosticsCoordinatesText.removeFromParent();
+            }
+            if (diagnosticsCoordinatesPointedAtText != null) {
+                diagnosticsCoordinatesPointedAtText.removeFromParent();
+            }
+            if (diagnosticsBlockPointedAtText != null) {
+                diagnosticsBlockPointedAtText.removeFromParent();
+            }
+        }
+    }
+
+    private void updateDiagnosticsDisplay() {
+        if (!initialized || playerControl == null || blockTerrain == null) {
+            return;
+        }
+        String seperator = ", ";
+        StringBuilder sb = new StringBuilder();
+
+        Vector3f position = playerControl.getPhysicsLocation().divide(BLOCK_SIZE);
+        Vector3Int pointedAtBlockCoord = getCurrentPointedBlockLocation(false);
+        //Vector3Int pointedAtBlockCoordNeighbor = getCurrentPointedBlockLocation(true);
+        BlockBase block = null;
+        if (pointedAtBlockCoord != null) {
+            block = (BlockBase) blockTerrain.getBlock(pointedAtBlockCoord);
+        }
+
+        //set diagnosticsCoordinatesText
+        sb.append("Position: ");
+        sb.append(String.format("%.3f", position.getX()));
+        sb.append(seperator);
+        sb.append(String.format("%.3f", position.getY()));
+        sb.append(seperator);
+        sb.append(String.format("%.3f", position.getZ()));
+        diagnosticsCoordinatesText.setText(sb.toString());
+        sb.setLength(0);
+
+        //set diagnosticsCoordinatesPointedAtText
+        sb.append("Pointing at: ");
+        if (pointedAtBlockCoord != null) {
+            sb.append(pointedAtBlockCoord.getX());
+            sb.append(seperator);
+            sb.append(pointedAtBlockCoord.getY());
+            sb.append(seperator);
+            sb.append(pointedAtBlockCoord.getZ());
+        } else {
+            sb.append("(None)");
+        }
+        diagnosticsCoordinatesPointedAtText.setText(sb.toString());
+        sb.setLength(0);
+
+        //set diagnosticsBlockPointedAtText
+        sb.append("Block Pointed at: ");
+        if (block != null) {
+            sb.append("Name: ");
+            sb.append(block.getCommandName());
+            sb.append(pointedAtBlockCoord.getY());
+            sb.append(" / ID: ");
+            sb.append(block.getBlockId());
+            sb.append(":");
+            sb.append(block.getVariantId());
+        } else {
+            sb.append("(None)");
+        }
+        diagnosticsBlockPointedAtText.setText(sb.toString());
+        sb.setLength(0);
     }
 }
