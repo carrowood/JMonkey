@@ -4,11 +4,12 @@ import com.cubes.*;
 import com.cybertivity.omgblockz.blocks.*;
 import com.cybertivity.omgblockz.worlds.*;
 import com.cybertivity.omgblockz.dimensions.*;
+import com.cybertivity.omgblockz.dimensions.Dimension;
 import com.cybertivity.omgblockz.utility.*;
 import com.jme3.app.SimpleApplication;
 import com.jme3.bullet.BulletAppState;
-import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
-import com.jme3.bullet.control.CharacterControl;
+import com.jme3.bullet.collision.shapes.*;
+import com.jme3.bullet.control.*;
 import com.jme3.collision.CollisionResults;
 import com.jme3.font.BitmapText;
 import com.jme3.input.*;
@@ -17,39 +18,40 @@ import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.*;
 import com.jme3.post.*;
-import com.jme3.renderer.RenderManager;
+import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
 import com.jme3.scene.shape.*;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.system.AppSettings;
-import com.jme3.util.SkyFactory;
 import com.jme3.water.WaterFilter;
+import java.awt.*;
 import jme3utilities.TimeOfDay;
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
+import java.util.List;
+import java.util.logging.*;
 import jme3utilities.sky.SkyControl;
 
 public class Main extends SimpleApplication implements ActionListener {
 
-    private final Vector3Int terrainSize = new Vector3Int(100, 30, 100);
+    private static final Logger log = Logger.getLogger(Main.class.getName());
+    private static final Vector3f lightDirection = new Vector3f(-0.8f, -1, -0.8f).normalizeLocal();
     private BulletAppState bulletAppState;
     private CharacterControl playerControl;
     private Vector3f walkDirection = new Vector3f();
     private boolean[] arrowKeys = new boolean[4];
-    private static FileHandler fh = null;
     private CubesSettings cubesSettings;
     private BlockTerrainControl blockTerrain;
     private Node terrainNode;
+    private static FileHandler fh = null;
     private static final int BLOCK_SIZE = 4;
     private MyBlockManager blockManager;
-    TimeOfDay timeOfDay;
-    private static final Logger log = Logger.getLogger(Chunk.class.getName());
+    private WorldInterface currentWorld;
+    private DimensionInterface currentDimension;
+    private BitmapText coordinatesText;
+    private TimeOfDay timeOfDay;
 
-    private static void ConfigureLogging() {
+    private static void configureLogging() {
         Logger l = Logger.getLogger("");
         fh.setFormatter(new SimpleFormatter());
         l.addHandler(fh);
@@ -58,65 +60,124 @@ public class Main extends SimpleApplication implements ActionListener {
 
     public Main() {
         settings = new AppSettings(true);
-        settings.setWidth(1280);
-        settings.setHeight(720);
+        settings.setWidth(1680);
+        settings.setHeight(1050);
         settings.setTitle("OMG! Blockz!");
     }
 
     public static void main(String[] args) {
         Main app = new Main();
         app.start();
-        ConfigureLogging();
+        configureLogging();
     }
 
     @Override
     public void simpleInitApp() {
-        InitCubes();
-        SetupSky();
-        //AttachTestBox();
-        initNewWorld(null, "D:\\temp\\OMGBlockz", "Test1");
+        bulletAppState = new BulletAppState();
+        stateManager.attach(bulletAppState);
+        initCubes();
+        setupSky();
+        //AttachTestBox();        
         initCrossHairs();
         initMark();
         initKeys();
         initializeEnvironment(this);
-        initializeWater(this);
-        //initPlayer();
-        Vector3f cameraLocation = new Vector3f(0, 20, 0);
-        cam.setLocation(cameraLocation);
+        //initializeWater(this);
+        initBlockTerrain();
+
+        Vector3f playerStartPos = new Vector3f(4f, 0f, 4f);
+        int y = getTopMostEmptyBlock((int) playerStartPos.x, (int) playerStartPos.z, blockTerrain, currentDimension.getWorldHeight());
+        playerStartPos.y = y + 5; //for a mini fall
+        initPlayer(playerStartPos);
+
         //cam.lookAtDirection(new Vector3f(64 * BLOCK_SIZE, camHeight / 3, 64 * BLOCK_SIZE), Vector3f.UNIT_Y);
         flyCam.setMoveSpeed(150);
         cam.setFrustumFar(4000);
 
         //setDisplayStatView(false);
+        int camHeight = y + (1 //(to get on top of the ground) - I dont understand why I need this extra one...
+                + 1); // (to get at eye level not feet level))
+        Vector3f cameraLocation = new Vector3f(playerStartPos.x, camHeight, playerStartPos.z);
+        cam.setLocation(cameraLocation);
+        InitHud(cameraLocation);
+
     }
 
-//    @Override
-//    public void simpleUpdate(float tpf) {
-//        //TODO: add update code
-//    }
-//
+    private void initPlayer(Vector3f playerStartPos) {
+
+        playerControl = new CharacterControl(new CapsuleCollisionShape((cubesSettings.getBlockSize() / 2), cubesSettings.getBlockSize() * 2), 0.05f);
+        playerControl.setJumpSpeed(25);
+        playerControl.setFallSpeed(30);
+        playerControl.setGravity(70);
+        playerControl.setPhysicsLocation(playerStartPos.mult(cubesSettings.getBlockSize()));
+        bulletAppState.getPhysicsSpace().add(playerControl);
+    }
+
+    private void initBlockTerrain() {
+
+        Vector3Int numberOfChunks = new Vector3Int(4, 1, 4);
+        blockTerrain = new BlockTerrainControl(cubesSettings, numberOfChunks);
+        terrainNode = new Node();
+        terrainNode.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
+        terrainNode.addControl(blockTerrain);
+
+        currentWorld = initNewWorld("TunaBomber", "D:\\temp\\OMGBlockz", "Test1");
+        currentDimension = currentWorld.getDimension(Dimension.OVERWORLD);
+        blockTerrain.addChunkListener(new BlockChunkListener() {
+            @Override
+            public void onSpatialUpdated(BlockChunkControl blockChunk) {
+                Geometry optimizedGeometry = blockChunk.getOptimizedGeometry_Opaque();
+                RigidBodyControl rigidBodyControl = optimizedGeometry.getControl(RigidBodyControl.class);
+                if (rigidBodyControl == null) {
+                    rigidBodyControl = new RigidBodyControl(0);
+                    optimizedGeometry.addControl(rigidBodyControl);
+                    bulletAppState.getPhysicsSpace().add(rigidBodyControl);
+                }
+                rigidBodyControl.setCollisionShape(new MeshCollisionShape(optimizedGeometry.getMesh()));
+            }
+        });
+
+        rootNode.attachChild(terrainNode);
+    }
+
+    @Override
+    public void simpleUpdate(float lastTimePerFrame) {
+        float playerMoveSpeed = ((cubesSettings.getBlockSize() * 125.5f) * lastTimePerFrame);
+        Vector3f camDir = cam.getDirection().mult(playerMoveSpeed);
+        Vector3f camLeft = cam.getLeft().mult(playerMoveSpeed);
+        walkDirection.set(0, 0, 0);
+        if (arrowKeys[0]) {
+            walkDirection.addLocal(camDir);
+        }
+        if (arrowKeys[1]) {
+            walkDirection.addLocal(camLeft.negate());
+        }
+        if (arrowKeys[2]) {
+            walkDirection.addLocal(camDir.negate());
+        }
+        if (arrowKeys[3]) {
+            walkDirection.addLocal(camLeft);
+        }
+        walkDirection.setY(0);
+        playerControl.setWalkDirection(walkDirection);
+        cam.setLocation(playerControl.getPhysicsLocation());
+        coordinatesText.setText(playerControl.getPhysicsLocation().divide(BLOCK_SIZE).toString());
+    }
+
 //    @Override
 //    public void simpleRender(RenderManager rm) {
 //        //TODO: add render code
 //    }
-    private void AttachChunks(Chunk[][] chunks, int arrayBoundsX, int arrayBoundsZ) {
-        for (int x = 0; x < arrayBoundsX; x++) {
-            for (int z = 0; z < arrayBoundsZ; z++) {
-                AttachChunk(chunks[x][z]);
-            }
-        }
-    }
-
-    private void AttachChunk(Chunk chunk) {
-        if (chunk != null) {
+    private void setBlocks(short[][][] blockIDs, Coordinate3D startingCoordinates) {
+        if (blockIDs != null) {
             //for every X,Z in chunk...
             Coordinate3D blockCoordinates = new Coordinate3D(0, 0, 0);
-            for (int xOffset = 0; xOffset < Chunk.CHUNK_WIDTH_IN_BLOCKS; xOffset++) {
-                for (int zOffset = 0; zOffset < Chunk.CHUNK_WIDTH_IN_BLOCKS; zOffset++) {
-                    blockCoordinates.x = (chunk.getChunkCoordinateX() * Chunk.CHUNK_WIDTH_IN_BLOCKS) + xOffset;
-                    blockCoordinates.z = (chunk.getChunkCoordinateZ() * Chunk.CHUNK_WIDTH_IN_BLOCKS) + zOffset;
-                    for (int y = 0; y < chunk.getYMax(); y++) {
-                        BlockBase block = chunk.getBlock(xOffset, y, zOffset);
+            for (int xOffset = 0; xOffset < blockIDs.length; xOffset++) {
+                for (int zOffset = 0; zOffset < blockIDs[0][0].length; zOffset++) {
+                    blockCoordinates.x = startingCoordinates.x + xOffset;
+                    blockCoordinates.z = startingCoordinates.y + zOffset;
+                    for (int y = 0; y < blockIDs[0].length; y++) {
+                        BlockBase block = blockManager.getInstanceByBlockID(blockIDs[xOffset][y][zOffset]);
                         if (block != null) { //null=air
                             blockTerrain.setBlock(blockCoordinates.x, y, blockCoordinates.z, block);
                         }
@@ -125,7 +186,6 @@ public class Main extends SimpleApplication implements ActionListener {
             }
         }
     }
-    private static final Vector3f lightDirection = new Vector3f(-0.8f, -1, -0.8f).normalizeLocal();
 
     public static void initializeEnvironment(SimpleApplication simpleApplication) {
         DirectionalLight directionalLight = new DirectionalLight();
@@ -139,15 +199,6 @@ public class Main extends SimpleApplication implements ActionListener {
         directionalLightShadowRenderer.setShadowIntensity(0.3f);
         simpleApplication.getViewPort().addProcessor(directionalLightShadowRenderer);
     }
-
-//    private void initPlayer() {
-//        playerControl = new CharacterControl(new CapsuleCollisionShape((cubesSettings.getBlockSize() / 2), cubesSettings.getBlockSize() * 2), 0.05f);
-//        playerControl.setJumpSpeed(25);
-//        playerControl.setFallSpeed(20);
-//        playerControl.setGravity(70);
-//        playerControl.setPhysicsLocation(new Vector3f(5, terrainSize.getY() + 5, 5).mult(cubesSettings.getBlockSize()));
-//        bulletAppState.getPhysicsSpace().add(playerControl);
-//    }
 
     public static void initializeWater(SimpleApplication simpleApplication) {
         WaterFilter waterFilter = new WaterFilter(simpleApplication.getRootNode(), lightDirection);
@@ -167,8 +218,8 @@ public class Main extends SimpleApplication implements ActionListener {
         return filterPostProcessor;
     }
 
-    private void InitCubes() {
-        blockManager = new MyBlockManager();
+    private void initCubes() {
+        blockManager = MyBlockManager.getInstance();
         cubesSettings = new CubesSettings(this);
         cubesSettings.setBlockSize(BLOCK_SIZE);
 
@@ -177,7 +228,7 @@ public class Main extends SimpleApplication implements ActionListener {
         cubesSettings.setDefaultBlockMaterial("Textures/cubes/terrain.png");
     }
 
-    private void AttachTestBox() {
+    private void attachTestBox() {
         Box b = new Box(1, 1, 1);
         Geometry geom = new Geometry("Box", b);
 
@@ -188,7 +239,7 @@ public class Main extends SimpleApplication implements ActionListener {
         rootNode.attachChild(geom);
     }
 
-    private void SetupSky() {
+    private void setupSky() {
         //https://code.google.com/p/jme3-utilities/wiki/AddToExistingGame
         timeOfDay = new TimeOfDay(12f);
         stateManager.attach(timeOfDay);
@@ -260,15 +311,25 @@ public class Main extends SimpleApplication implements ActionListener {
 
     /** Declaring the "Shoot" action and mapping to its triggers. */
     private void initKeys() {
+
+        inputManager.addMapping("move_left", new KeyTrigger(KeyInput.KEY_A));
+        inputManager.addMapping("move_right", new KeyTrigger(KeyInput.KEY_D));
+        inputManager.addMapping("move_up", new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
+        inputManager.addMapping("move_down", new KeyTrigger(KeyInput.KEY_S));
+        inputManager.addMapping("jump", new KeyTrigger(KeyInput.KEY_SPACE));
+        inputManager.addMapping("full_screen", new KeyTrigger(KeyInput.KEY_F11));
         inputManager.addMapping("Shoot",
                 //new KeyTrigger(KeyInput.KEY_SPACE), // trigger 1: spacebar
                 new MouseButtonTrigger(MouseInput.BUTTON_LEFT)); // trigger 2: left-button click
+
+        inputManager.addListener(this, "move_left");
+        inputManager.addListener(this, "move_right");
+        inputManager.addListener(this, "move_up");
+        inputManager.addListener(this, "move_down");
+        inputManager.addListener(this, "jump");
+        inputManager.addListener(this, "full_screen");
         inputManager.addListener(actionListener, "Shoot");
-        inputManager.addMapping("move_left", new KeyTrigger(KeyInput.KEY_A));
-        inputManager.addMapping("move_right", new KeyTrigger(KeyInput.KEY_D));
-        inputManager.addMapping("move_up", new KeyTrigger(KeyInput.KEY_SPACE));
-        inputManager.addMapping("move_down", new KeyTrigger(KeyInput.KEY_LSHIFT));
-        //inputManager.addMapping("jump", new KeyTrigger(KeyInput.KEY_SPACE));
+
         inputManager.addListener(actionListener, "move_left");
         inputManager.addListener(actionListener, "move_right");
         inputManager.addListener(actionListener, "move_up");
@@ -288,6 +349,8 @@ public class Main extends SimpleApplication implements ActionListener {
             arrowKeys[2] = value;
         } else if (actionName.equals("jump")) {
             playerControl.jump();
+        } else if (actionName.equals("full_screen")) {
+            toggleFullscreen();
         }
     }
     /** Defining the "Shoot" action: Determine what was hit and how to respond. */
@@ -328,30 +391,66 @@ public class Main extends SimpleApplication implements ActionListener {
                 //(The block location is null, if the user looks in the sky or out of the map)
                 if (blockLocation != null) {
                     //… and place a block there <img src='http://hub.jmonkeyengine.org/wp-includes/images/smilies/chimpanzee-smile.gif' alt=':)' class='wp-smiley' />
-                    BlockBase block = MyBlockManager.GetInstanceByBlockID((short) 17);
+                    BlockBase block = blockManager.getInstanceByBlockID((short) 17);
                     blockTerrain.setBlock(blockLocation, block);
                 }
             }
         }
     };
 
-    private void initNewWorld(String seed, String path, String name) {
-        Vector3Int numberOfChunks = new Vector3Int(4, 1, 4);
-        blockTerrain = new BlockTerrainControl(cubesSettings, numberOfChunks);
+    private StandardWorld initNewWorld(String seed, String path, String name) {
+        StandardWorld world = null;
         try {
-            StandardWorld world = new StandardWorld(seed, path + FileSystemHelper.GetFileSeparator() + "Saves", name);
-            int arrayBoundsX = 4;
-            int arrayBoundsY = 4;
-            Chunk[][] chunks = world.getChunkArray(Dimension.OVERWORLD, new Coordinate3D(0, 0, 0), arrayBoundsX, arrayBoundsY);
-            AttachChunks(chunks, arrayBoundsX, arrayBoundsY);
-
-            terrainNode = new Node();
-            terrainNode.addControl(blockTerrain);
-            rootNode.attachChild(terrainNode);
+            world = new StandardWorld(seed, path + FileSystemHelper.GetFileSeparator() + "Saves", name);
+            Coordinate3D startPos = new Coordinate3D(0, 0, 0);
+            short[][][] blocks = world.getTerrain(Dimension.OVERWORLD, new Coordinate3D(0, 0, 0), 16 * 21, 16 * 21);
+            setBlocks(blocks, startPos);
             log.log(Level.INFO, "Successfully created new world: " + name);
         } catch (IOException ex) {
             log.log(Level.SEVERE, "Could not create new world structure on disk. Exiting", ex);
             this.stop();
         }
+        return world;
+    }
+
+    private int getTopMostBlock(int xPos, int zPos, BlockTerrainControl blockTerrain, int worldHeight) {
+        boolean foundBlock = false;
+        int z = worldHeight + 1;
+
+        while (!foundBlock && z > 0) {
+            z--;
+            foundBlock = blockTerrain.getBlock(xPos, z, zPos) != null;
+        }
+        return z;
+    }
+
+    private int getTopMostEmptyBlock(int xPos, int zPos, BlockTerrainControl blockTerrain, int worldHeight) {
+
+        return getTopMostBlock(xPos, zPos, blockTerrain, worldHeight) + 1;
+    }
+
+    public void toggleFullscreen() {
+        if (!settings.isFullscreen()) {
+            GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+            DisplayMode[] modes = device.getDisplayModes();
+            int i = 0; // note: there are usually several, let's pick the first
+            settings.setResolution(modes[i].getWidth(), modes[i].getHeight());
+            settings.setFrequency(modes[i].getRefreshRate());
+            settings.setBitsPerPixel(modes[i].getBitDepth());
+            settings.setFullscreen(device.isFullScreenSupported());
+            this.setSettings(settings);
+            this.restart(); // restart the context to apply changes
+        } else {
+            //TODO: Remember previous settings and restore them.
+        }
+    }
+
+    private void InitHud(Vector3f location) {
+        coordinatesText = new BitmapText(guiFont, false);
+        coordinatesText.setSize(guiFont.getCharSet().getRenderedSize());      // font size
+        coordinatesText.setColor(ColorRGBA.Blue);                             // font color
+        coordinatesText.setText(location.divide(BLOCK_SIZE).toString());             // the text
+        coordinatesText.setLocalTranslation(10, settings.getHeight() - 10, 10); //hudText.getLineHeight(), 0); // position
+        guiNode.attachChild(coordinatesText);
     }
 }

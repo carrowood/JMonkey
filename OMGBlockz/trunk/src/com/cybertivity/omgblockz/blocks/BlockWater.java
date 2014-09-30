@@ -4,13 +4,10 @@ import com.cubes.*;
 
 public class BlockWater extends BlockBase {
 
-    private static final BlockSkin[] SKINS = new BlockSkin[]{
-            new BlockSkin(new BlockSkin_TextureLocation(0, 1), true),
-    };
     private static BlockWater instance = null;
 
     private BlockWater() {
-        super(SKINS);
+        super(new BlockSkin(new BlockSkin_TextureLocation(0, 1), true));
         setAttributes();
     }
 

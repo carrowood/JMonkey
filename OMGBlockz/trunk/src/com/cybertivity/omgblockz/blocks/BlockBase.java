@@ -11,7 +11,7 @@ public abstract class BlockBase extends Block {
     protected byte height = 1;
     protected byte width = 1;
 
-    protected BlockBase(BlockSkin[] skins) {
+    protected BlockBase(BlockSkin... skins) {
         super(skins);
     }
 

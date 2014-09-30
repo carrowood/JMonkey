@@ -1,7 +1,6 @@
 package com.cybertivity.omgblockz.biomes;
 
 import com.cubes.*;
-import com.cybertivity.omgblockz.Chunk;
 import com.cybertivity.omgblockz.blocks.*;
 import com.cybertivity.omgblockz.utility.*;
 import java.util.ArrayList;
@@ -19,50 +18,48 @@ public abstract class BiomeBase implements BiomeInterface {
         return allowedAdjacentBiomeIDs;
     }
 
-    protected void generateSolidTerrain(int seed, short frequency, short amplitude,
-            Chunk chunk, short blockId, short worldHeight) {
+    protected short[][][] generateSolidTerrain(short[][][] blockIds, int seed, short frequency, short amplitude,
+            short blockId, Coordinate3D dimensionCoordinate) {
 
-        generateSolidTerrain(seed, frequency, amplitude, chunk, blockId, worldHeight, (byte) -1);
+        return generateSolidTerrain(blockIds, seed, frequency, amplitude, blockId, dimensionCoordinate, (byte) -1);
     }
 
-    protected void generateSolidTerrain(int seed, short frequency, short amplitude,
-            Chunk chunk, short blockId, short worldHeight, byte seaLevel) {
+    protected short[][][] generateSolidTerrain(short[][][] blockIds, int seed, short frequency, short amplitude,
+            short blockId, Coordinate3D dimensionCoordinate, byte seaLevel) {
 
         Perlin2D octave0 = new Perlin2D(seed, frequency);
-        int dimensionPosX = chunk.getChunkCoordinateX() * Chunk.CHUNK_WIDTH_IN_BLOCKS;
         int y;
-        int dimensionPosZ = chunk.getChunkCoordinateZ() * Chunk.CHUNK_WIDTH_IN_BLOCKS;
         double noise;
 
-        Coordinate3D dimensionCoordinate = new Coordinate3D(dimensionPosX, 0, dimensionPosZ);
-
-
         //for every X,Z in chunk...
-        for (int xOffset = 0; xOffset < Chunk.CHUNK_WIDTH_IN_BLOCKS; xOffset++) {
-            for (int zOffset = 0; zOffset < Chunk.CHUNK_WIDTH_IN_BLOCKS; zOffset++) {
+        for (int xOffset = 0; xOffset < blockIds.length; xOffset++) {
+            for (int zOffset = 0; zOffset < blockIds[0][0].length; zOffset++) {
                 //get the noise at X,Z to determine the height
                 noise = amplitude * octave0.getNoiseLevelAtPosition(
                         (dimensionCoordinate.getX() + xOffset),
                         (dimensionCoordinate.getZ() + zOffset));
 
-                //Set all blocks at X,Z from bottom up to noise level
+                //just in case we get a negative
                 if (noise <= 0) {
-                    chunk.setBlock(new Coordinate3D(xOffset, 0, zOffset), blockId);
+                    blockIds[xOffset][0][zOffset] = blockId;
                 } else {
+                    //Set all blocks at X,Z from bottom up to noise level
                     for (y = 0; y < noise; y++) {
-                        if (y < worldHeight) {
-                            chunk.setBlock(new Coordinate3D(xOffset, y, zOffset), blockId);
+                        if (y < blockIds[0].length) {
+                            blockIds[xOffset][y][zOffset] = blockId;
                         }
                     }
                     if (seaLevel > 0) {
                         short blockWaterID = BlockWater.getInstance().getBlockId();
                         while (y <= seaLevel) {
-                            chunk.setBlock(new Coordinate3D(xOffset, y, zOffset), blockWaterID);
+                            blockIds[xOffset][y][zOffset] = blockWaterID;
                             y++;
                         }
                     }
                 }
             }
         }
+
+        return blockIds;
     }
 }

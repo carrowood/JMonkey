@@ -4,7 +4,6 @@
  */
 package com.cybertivity.omgblockz.dimensions;
 
-import com.cybertivity.omgblockz.Chunk;
 import com.cybertivity.omgblockz.biomes.BiomeInterface;
 import com.cybertivity.omgblockz.biomes.BiomeManager;
 import com.cybertivity.omgblockz.utility.*;
@@ -30,34 +29,29 @@ public abstract class DimensionBase implements DimensionInterface {
         FileSystemHelper.createDirectoryIfNeeded(path);
     }
 
-    public Chunk getChunk(int seed, Coordinate3D dimensionCoordinate) {
-        int chunkCoordinateX = Chunk.getChunkCoordinateXFromDimensionCoordinateX(dimensionCoordinate);
-        int chunkCoordinateZ = Chunk.getChunkCoordinateZFromDimensionCoordinateZ(dimensionCoordinate);
-        Chunk chunk = Chunk.getExistingChunk(chunkCoordinateX, chunkCoordinateZ);
-        if (chunk == null) {
-            BiomeManager biomeManager = BiomeManager.getInstance();
-            BiomeInterface biome = biomeManager.GetBiome(seed, dimensionCoordinate);
-            chunk = biome.GetChunk(seed, chunkCoordinateX, chunkCoordinateZ, this);
-        }
-        return chunk;
+    public short[][][] getTerrain(int seed, Coordinate3D dimensionCoordinate, int blockCountX, int blockCountZ) {
+
+        BiomeManager biomeManager = BiomeManager.getInstance();
+        BiomeInterface biome = biomeManager.GetBiome(seed, dimensionCoordinate);
+        short[][][] blockIDs = new short[blockCountX][this.getWorldHeight()][blockCountZ];
+        return biome.getTerrain(blockIDs, seed, dimensionCoordinate.x, dimensionCoordinate.z, this);
     }
 
-    public Chunk[][] getChunkArray(int seed, Coordinate3D dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ) {
-        int chunkCoordinateX = Chunk.getChunkCoordinateXFromDimensionCoordinateX(dimensionCoordinate);
-        int chunkCoordinateZ = Chunk.getChunkCoordinateZFromDimensionCoordinateZ(dimensionCoordinate);
-
-        Chunk[][] chunks = new Chunk[arrayBoundsX][arrayBoundsZ];
-        Coordinate3D coordinateToGet = new Coordinate3D(0, 0, 0);
-        for (int x = 0; x < arrayBoundsX; x++) {
-            for (int z = 0; z < arrayBoundsZ; z++) {
-                coordinateToGet.x = chunkCoordinateX + (x * Chunk.CHUNK_WIDTH_IN_BLOCKS);
-                coordinateToGet.z = chunkCoordinateZ + (z * Chunk.CHUNK_WIDTH_IN_BLOCKS);
-                chunks[x][z] = getChunk(seed, coordinateToGet);
-            }
-        }
-        return chunks;
-    }
-
+//    public Chunk[][] getChunkArray(int seed, Coordinate3D dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ) {
+//        int chunkCoordinateX = Chunk.getChunkCoordinateXFromDimensionCoordinateX(dimensionCoordinate);
+//        int chunkCoordinateZ = Chunk.getChunkCoordinateZFromDimensionCoordinateZ(dimensionCoordinate);
+//
+//        Chunk[][] chunks = new Chunk[arrayBoundsX][arrayBoundsZ];
+//        Coordinate3D coordinateToGet = new Coordinate3D(0, 0, 0);
+//        for (int x = 0; x < arrayBoundsX; x++) {
+//            for (int z = 0; z < arrayBoundsZ; z++) {
+//                coordinateToGet.x = chunkCoordinateX + (x * Chunk.CHUNK_WIDTH_IN_BLOCKS);
+//                coordinateToGet.z = chunkCoordinateZ + (z * Chunk.CHUNK_WIDTH_IN_BLOCKS);
+//                chunks[x][z] = getChunk(seed, coordinateToGet);
+//            }
+//        }
+//        return chunks;
+//    }
     public short getWorldHeight() {
         return worldHeight;
     }

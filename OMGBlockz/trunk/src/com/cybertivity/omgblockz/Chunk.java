@@ -72,7 +72,8 @@ public class Chunk {
     public BlockBase getBlock(Coordinate3D coordinateWithInChunk) {
         short blockID = blockIDs[coordinateWithInChunk.getX()][coordinateWithInChunk.getY()][coordinateWithInChunk.getZ()];
         lastAccessed = new Date();
-        return MyBlockManager.GetInstanceByBlockID(blockID);
+        MyBlockManager blockManager = MyBlockManager.getInstance();
+        return blockManager.getInstanceByBlockID(blockID);
     }
 
     public void setBlock(Coordinate3D coordinateWithInChunk, short blockId) {

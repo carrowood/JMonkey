@@ -1,6 +1,5 @@
 package com.cybertivity.omgblockz.worlds;
 
-import com.cybertivity.omgblockz.Chunk;
 import com.cybertivity.omgblockz.dimensions.*;
 import com.cybertivity.omgblockz.utility.Coordinate3D;
 import java.util.ArrayList;
@@ -25,7 +24,8 @@ public interface WorldInterface {
      */
     void addDimension(DimensionInterface dimension);
 
-    Chunk getChunk(Dimension dimension, Coordinate3D coordinate);
+    short[][][] getTerrain(Dimension dimension, Coordinate3D dimensionCoordinate, int blockCountX, int blockCountZ);
+//    Chunk[][] getChunkArray(Dimension dimension, Coordinate3D dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ);
 
-    Chunk[][] getChunkArray(Dimension dimension, Coordinate3D dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ);
+    DimensionInterface getDimension(Dimension dimension);
 }

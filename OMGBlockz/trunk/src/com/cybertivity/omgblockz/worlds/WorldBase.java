@@ -33,16 +33,19 @@ public abstract class WorldBase implements WorldInterface {
         return seed.hashCode();
     }
 
-    public Chunk getChunk(Dimension dimension, Coordinate3D dimensionCoordinate) {
+    public short[][][] getTerrain(Dimension dimension, Coordinate3D dimensionCoordinate, int blockCountX, int blockCountZ) {
         DimensionInterface targetDimension = DetermineDimension(dimension);
-        return targetDimension.getChunk(seed, dimensionCoordinate);
+        return targetDimension.getTerrain(seed, dimensionCoordinate, blockCountX, blockCountZ);
     }
 
-    public Chunk[][] getChunkArray(Dimension dimension, Coordinate3D dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ) {
-        DimensionInterface targetDimension = DetermineDimension(dimension);
-        return targetDimension.getChunkArray(seed, dimensionCoordinate, arrayBoundsX, arrayBoundsZ);
+    public DimensionInterface getDimension(Dimension dimension) {
+        return DetermineDimension(dimension);
     }
 
+//    public Chunk[][] getChunkArray(Dimension dimension, Coordinate3D dimensionCoordinate, int arrayBoundsX, int arrayBoundsZ) {
+//        DimensionInterface targetDimension = DetermineDimension(dimension);
+//        return targetDimension.getChunkArray(seed, dimensionCoordinate, arrayBoundsX, arrayBoundsZ);
+//    }
     @Override
     public void save() {
         throw new UnsupportedOperationException("Not Implemented");

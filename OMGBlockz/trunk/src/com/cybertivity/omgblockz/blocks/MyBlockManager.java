@@ -5,6 +5,7 @@ import java.util.*;
 
 public class MyBlockManager extends BlockManager {
 
+    private static MyBlockManager instance = null;
     private static HashMap<Short, BlockBase> BLOCKS = new HashMap<Short, BlockBase>();
     public final BlockGrass BLOCK_GRASS = BlockGrass.getInstance();
     public final BlockWood BLOCK_WOOD = BlockWood.getInstance();
@@ -15,7 +16,7 @@ public class MyBlockManager extends BlockManager {
     public final BlockStonePillar BLOCK_STONE_PILLAR = BlockStonePillar.getInstance();
     public final BlockWater BLOCK_WATER = BlockWater.getInstance();
 
-    public MyBlockManager() {
+    private MyBlockManager() {
         RegisterBlock(BLOCK_GRASS);
         RegisterBlock(BLOCK_WOOD);
         RegisterBlock(BLOCK_BRICK);
@@ -24,6 +25,13 @@ public class MyBlockManager extends BlockManager {
         RegisterBlock(BLOCK_STONE);
         RegisterBlock(BLOCK_STONE_PILLAR);
         RegisterBlock(BLOCK_WATER);
+    }
+
+    public static MyBlockManager getInstance() {
+        if (instance == null) {
+            instance = new MyBlockManager();
+        }
+        return instance;
     }
 
     private void RegisterBlock(BlockBase block) {
@@ -36,7 +44,7 @@ public class MyBlockManager extends BlockManager {
      * @param blockID
      * @return
      */
-    public static BlockBase GetInstanceByBlockID(short blockID) {
+    public BlockBase getInstanceByBlockID(short blockID) {
         return BLOCKS.get(blockID);
     }
 }
