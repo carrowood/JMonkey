@@ -26,7 +26,7 @@
  *
  * Imported by Chris Arrowood, from a blog post by Jens Bergensten
  * at: http://mojang.com/2011/02/16/minecraft-save-file-format-in-beta-1-3/
- * whick linked pastebin: http://pastebin.com/jvZ1yhAd
+ * which linked pastebin: http://pastebin.com/jvZ1yhAd
  * 
  * Autoformatted, changed package name, and perhaps other future changes; Use
  * SVN history to see

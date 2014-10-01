@@ -54,6 +54,7 @@ public class Main extends SimpleApplication implements ActionListener {
     private BitmapText diagnosticsCoordinatesText;
     private BitmapText diagnosticsCoordinatesPointedAtText;
     private BitmapText diagnosticsBlockPointedAtText;
+    private GameMode gameMode = GameMode.SURVIVAL;
 
     private static void configureLogging() {
         Logger l = Logger.getLogger("");
@@ -95,15 +96,16 @@ public class Main extends SimpleApplication implements ActionListener {
         initPlayer(playerStartPos);
         initDiagnosticsDisplay();
 
-        //cam.lookAtDirection(new Vector3f(64 * BLOCK_SIZE, camHeight / 3, 64 * BLOCK_SIZE), Vector3f.UNIT_Y);
         flyCam.setMoveSpeed(150);
         cam.setFrustumFar(4000);
+
 
         //setDisplayStatView(false);
         int camHeight = y + (1 //(to get on top of the ground) - I dont understand why I need this extra one...
                 + 1); // (to get at eye level not feet level))
         Vector3f cameraLocation = new Vector3f(playerStartPos.x, camHeight, playerStartPos.z);
         cam.setLocation(cameraLocation);
+        cam.lookAtDirection(new Vector3f(64 * BLOCK_SIZE, camHeight / 3, 64 * BLOCK_SIZE), Vector3f.UNIT_Y);
 
         initialized = true;
 
@@ -112,9 +114,9 @@ public class Main extends SimpleApplication implements ActionListener {
     private void initPlayer(Vector3f playerStartPos) {
 
         playerControl = new CharacterControl(new CapsuleCollisionShape((cubesSettings.getBlockSize() / 2), cubesSettings.getBlockSize() * 2), 0.05f);
-        playerControl.setJumpSpeed(25);
-        playerControl.setFallSpeed(30);
-        playerControl.setGravity(70);
+        playerControl.setJumpSpeed(35);
+        playerControl.setFallSpeed(70);
+        playerControl.setGravity(130);
         playerControl.setPhysicsLocation(playerStartPos.mult(cubesSettings.getBlockSize()));
         bulletAppState.getPhysicsSpace().add(playerControl);
     }
@@ -319,9 +321,6 @@ public class Main extends SimpleApplication implements ActionListener {
         return null;
     }
 
-    /**
-     * Declaring the "Shoot" action and mapping to its triggers.
-     */
     private void initKeys() {
 
         inputManager.addMapping("move_left", new KeyTrigger(KeyInput.KEY_A));
@@ -331,6 +330,7 @@ public class Main extends SimpleApplication implements ActionListener {
         inputManager.addMapping("jump", new KeyTrigger(KeyInput.KEY_SPACE));
         inputManager.addMapping("full_screen", new KeyTrigger(KeyInput.KEY_F11));
         inputManager.addMapping("show_diag", new KeyTrigger(KeyInput.KEY_F3));
+        inputManager.addMapping("change_gamemode", new KeyTrigger(KeyInput.KEY_F4));
         inputManager.addMapping("Shoot",
                 //new KeyTrigger(KeyInput.KEY_SPACE), // trigger 1: spacebar
                 new MouseButtonTrigger(MouseInput.BUTTON_LEFT)); // trigger 2: left-button click
@@ -341,6 +341,7 @@ public class Main extends SimpleApplication implements ActionListener {
         inputManager.addListener(this, "move_down");
         inputManager.addListener(this, "jump");
         inputManager.addListener(this, "full_screen");
+        inputManager.addListener(this, "change_gamemode");
 
         inputManager.addListener(actionListener, "move_left");
         inputManager.addListener(actionListener, "move_right");
@@ -365,6 +366,13 @@ public class Main extends SimpleApplication implements ActionListener {
             playerControl.jump();
         } else if (actionName.equals("full_screen")) {
             toggleFullscreen();
+        } else if (actionName.equals("change_gamemode")) {
+            if (gameMode == GameMode.CREATIVE) {
+                changeGameMode(GameMode.SURVIVAL);
+            } else if (gameMode == GameMode.SURVIVAL) {
+                changeGameMode(GameMode.CREATIVE);
+            }
+
         }
     }
     /**
@@ -443,7 +451,6 @@ public class Main extends SimpleApplication implements ActionListener {
     }
 
     private int getTopMostEmptyBlock(int xPos, int zPos, BlockTerrainControl blockTerrain, int worldHeight) {
-
         return getTopMostBlock(xPos, zPos, blockTerrain, worldHeight) + 1;
     }
 
@@ -460,36 +467,49 @@ public class Main extends SimpleApplication implements ActionListener {
             this.restart(); // restart the context to apply changes
         } else {
             settings.setFullscreen(false);
+            this.restart();
             //TODO: Remember previous settings and restore them.
         }
+        initDiagnosticsDisplay();
     }
 
     private void initDiagnosticsDisplay() {
-        float y = settings.getHeight() - 10;
-        float padding = 7f;
-        float size = guiFont.getCharSet().getRenderedSize();
+
+        float padding = 0.75f;
+        float size = guiFont.getCharSet().getRenderedSize() - 4;
         ColorRGBA textColor = ColorRGBA.Gray;
 
-        if (diagnosticsCoordinatesText == null) {
-            diagnosticsCoordinatesText = new BitmapText(guiFont, false);
-            diagnosticsCoordinatesText.setSize(size);
-            diagnosticsCoordinatesText.setColor(textColor);
-            diagnosticsCoordinatesText.setLocalTranslation(10, y, 10);
+        if (diagnosticsCoordinatesText != null) {
+            diagnosticsCoordinatesText.removeFromParent();
         }
+        if (diagnosticsCoordinatesPointedAtText != null) {
+            diagnosticsCoordinatesPointedAtText.removeFromParent();
+        }
+        if (diagnosticsBlockPointedAtText != null) {
+            diagnosticsBlockPointedAtText.removeFromParent();
+        }
+
+        float y = settings.getHeight() - 10;
+        diagnosticsCoordinatesText = initIndividualDiagnosticsLabel(new BitmapText(guiFont, false), textColor, size, 10, y, 10);
+
         y = y - padding - diagnosticsCoordinatesText.getLineHeight();
-        if (diagnosticsCoordinatesPointedAtText == null) {
-            diagnosticsCoordinatesPointedAtText = new BitmapText(guiFont, false);
-            diagnosticsCoordinatesText.setSize(size);
-            diagnosticsCoordinatesPointedAtText.setColor(textColor);
-            diagnosticsCoordinatesPointedAtText.setLocalTranslation(10, y, 10);
-        }
+        diagnosticsCoordinatesPointedAtText = initIndividualDiagnosticsLabel(new BitmapText(guiFont, false), textColor, size, 10, y, 10);
+
         y = y - padding - diagnosticsCoordinatesPointedAtText.getLineHeight();
-        if (diagnosticsBlockPointedAtText == null) {
-            diagnosticsBlockPointedAtText = new BitmapText(guiFont, false);
-            diagnosticsCoordinatesText.setSize(size);
-            diagnosticsBlockPointedAtText.setColor(textColor);
-            diagnosticsBlockPointedAtText.setLocalTranslation(10, y, 10);
+        diagnosticsBlockPointedAtText = initIndividualDiagnosticsLabel(new BitmapText(guiFont, false), textColor, size, 10, y, 10);
+
+        updateDiagnosticsDisplay();
+    }
+
+    private BitmapText initIndividualDiagnosticsLabel(BitmapText text, ColorRGBA textColor,
+            float size, float localTranslationX, float localTranslationY, float localTranslationZ) {
+        if (text == null) {
+            return null;
         }
+        text.setSize(size);
+        text.setColor(textColor);
+        text.setLocalTranslation(localTranslationX, localTranslationY, localTranslationZ);
+        return text;
     }
 
     private void toggleDiagnostics() {
@@ -555,7 +575,6 @@ public class Main extends SimpleApplication implements ActionListener {
         if (block != null) {
             sb.append("Name: ");
             sb.append(block.getCommandName());
-            sb.append(pointedAtBlockCoord.getY());
             sb.append(" / ID: ");
             sb.append(block.getBlockId());
             sb.append(":");
@@ -565,5 +584,17 @@ public class Main extends SimpleApplication implements ActionListener {
         }
         diagnosticsBlockPointedAtText.setText(sb.toString());
         sb.setLength(0);
+    }
+
+    private void changeGameMode(GameMode gameMode) {
+        this.gameMode = gameMode;
+        switch (gameMode) {
+            case CREATIVE:
+                //monthString = "January";
+                break;
+            case SURVIVAL:
+                //monthString = "January";
+                break;
+        }
     }
 }
